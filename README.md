@@ -36,6 +36,7 @@ python3 pg/gen/server10.py
 ...  
   
 等待讀取pcap直到出現ready  
+
   
 執行完成  
 monitor檔案儲存在home目錄  
