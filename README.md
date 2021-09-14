@@ -14,7 +14,7 @@ pg/gen/pkt_config/pkt_config.py
 執行mininet  
 sudo python3 mininet/custom/custom_example_7to7.py  
   
-執行ryu
+執行ryu  
 ryu-manager ryu/ryu/app/simple_switch_13_slice.py  
   
 在mininet輸入  
@@ -37,6 +37,5 @@ python3 pg/gen/server10.py
   
 等待讀取pcap直到出現ready  
   
-
 執行完成  
 monitor檔案儲存在home目錄  
