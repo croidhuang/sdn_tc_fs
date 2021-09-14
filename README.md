@@ -9,8 +9,8 @@ classifer/preprocessingpcap.py
 訓練model  
 classifer/sklearn.py
 
-將model儲存到資料夾
-/ryu/ryu/app/models/
+將model儲存到資料夾  
+/ryu/ryu/app/models/  
 
 安裝mininet和ryu  
 安裝python及所需的套件  
