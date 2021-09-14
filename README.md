@@ -1,5 +1,17 @@
 # sdn_tc_fs
 
+下載資料集  
+https://www.unb.ca/cic/datasets/vpn.html  
+
+預處理  
+classifer/preprocessingpcap.py  
+
+訓練model  
+classifer/sklearn.py
+
+將model儲存到資料夾
+/ryu/ryu/app/models/
+
 安裝mininet和ryu  
 安裝python及所需的套件  
 
