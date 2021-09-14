@@ -197,17 +197,12 @@ def transform_pcap(path, output_path: Path = None, output_batch_size=10000):
 
     print(output_path, 'Done')
 
-njob=14
 
 def main(source, target, njob):
     data_dir_path = Path(source)
     target_dir_path = Path(target)
     target_dir_path.mkdir(parents=True, exist_ok=True)
-    """
-    Parallel(n_jobs=njob)(
-        delayed(transform_pcap)(pcap_path, target_dir_path / (pcap_path.name + '.transformed')) for pcap_path in
-        sorted(data_dir_path.iterdir()))
-    """    
+
     for pcap_path in sorted(data_dir_path.iterdir()):
         transform_pcap(pcap_path, target_dir_path / (pcap_path.name + '.transformed')) 
 
