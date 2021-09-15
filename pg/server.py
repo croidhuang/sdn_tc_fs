@@ -38,15 +38,6 @@ flow[i] = rdpcap(p)
 timerecord[i] = [0]*len(flow[i])
 print('ready')
 
-sum_name=CSV_OUTPUTPATH+'pktsum'+'_server.csv'
-if os.path.isfile(sum_name):
-    pass
-else:
-    with open(sum_name,'w') as sum_file:
-        row=[] 
-        writer = csv.writer(sum_file)
-        writer.writerow(row)
-
 class Counter(dict):
     def __missing__(self,key):
         return 0
@@ -112,7 +103,7 @@ def pc_flow(pkt,i):
         pkt_ctrl[i][dst_socket]=0
     return src_socket,chk_socket
 
-def sendp_flow(i,sendp_count,pktsum):
+def sendp_flow(i,sendp_count):
     timer=time.time()
     waittime=PKT_FILE_INTERVAL[i]
 
@@ -137,52 +128,43 @@ def sendp_flow(i,sendp_count,pktsum):
             time.sleep(waittime)
     elif pkt_ctrl[i][pkt_socket]==1:
         print(f'wait={pkt_socket}')
-        pktsum=sniff_flow(i,chk_socket,timer,waittime-(1e-05),pktsum)
+        sniff_flow(i,chk_socket,timer,waittime-(1e-05))
         timerecord[i][j]=(time.time())
         sendp_count+=1
         
         waittime=waittime-(time.time()-timer)
         if waittime>0:
                 time.sleep(waittime)
-    return sendp_count,pktsum
+    return sendp_count
 
-def sniff_flow(i,wait_socket,timer,waittime,pktsum):
+def sniff_flow(i,wait_socket,timer,waittime):
     t='h'+str(slice_to_server(i))+'-eth0'
     while waittime>0:
         try:
-            pkt=sniff(iface=t,count=1,timeout=waittime,pktsum=pktsum)
+            pkt=sniff(iface=t,count=1,timeout=waittime)
             pkt_socket,chk_socket=pc_flow(pkt[0],i)
         except:
             waittime=waittime-(time.time()-timer)
             continue            
         if pkt_socket==wait_socket:
             print(f'{pkt_socket}=={wait_socket}')
-            print(len(raw(pkt)))
-            pktsum+=len(raw(pkt))
             break
         else:
             print(f'{pkt_socket}!={wait_socket}')
             waittime=waittime-(time.time()-timer) 
             continue
-    return pktsum
+    return 0
 
 def cnt_flow(i):
     sendp_count=0
-    pktsum=0
     time.sleep(FIRST_TIME_SLEEP*i)
     while sendp_count<NUM_PKT[i]:
-        sendp_count,pktsum=sendp_flow(i,sendp_count,pktsum)
+        sendp_count=sendp_flow(i,sendp_count)
+
     timerecord[i]=np.array(timerecord[i])
     csv_name=CSV_OUTPUTPATH+str(i)+'_server.csv'
     np.savetxt(csv_name,timerecord[i],fmt="%lf",delimiter=",")
     
-    sum_name=CSV_OUTPUTPATH+'pktsum'+'_server.csv'
-    sum_num=str(i)+'_server.csv'
-    with open(sum_name,'a') as sum_file:
-        row=[sum_num,pktsum] 
-        writer = csv.writer(sum_file)
-        writer.writerow(row)
-
 def main():
     cnt_flow(hostid_to_slice(hostid))
 
