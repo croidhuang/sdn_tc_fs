@@ -84,11 +84,11 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.ClassPrint_ctrl=0
         self.ScheudulerPrint_ctrl=0
         self.ActionPrint_ctrl=0
-        self.MonitorPrint_ctrl=1
+        self.MonitorPrint_ctrl=0
         self.LatencyPrint_ctrl=0
 
-        #function_ctrl
-        self.classifier_ctrl=0                #allrightbyip=0 model=1
+        #function_ctrl only scheduler and monitor =1
+        self.classifier_ctrl=0                #allright by ip=0, classification by model=1
         self.scheuduler_ctrl=SCHEDULER_TYPE   #0,1,"random","MAX","min","algo",
         self.FlowMatch_ctrl=0
         self.Monitor_ctrl=1
@@ -205,7 +205,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             'Rx_flow':{1:{4294967294:0},2:{4294967294:0},},
             }
         for dpid in range(1,2+1):
-            for i in range(2*self.switchq+1):
+            for i in range(2*self.SliceNum+1):
                 self.port_ctrl['prev_tx_bytes'][dpid][i]=0
                 self.port_ctrl['prev_rx_bytes'][dpid][i]=0
                 self.port_ctrl['prev_tx_packets'][dpid][i]=0
@@ -1022,8 +1022,8 @@ class SimpleSwitch13(app_manager.RyuApp):
                                     stat.tx_packets, stat.tx_bytes, self.port_ctrl['Tx_flow'][dpid][stat.port_no],
                                     latency,bandfree,bandload,bar)
 
+        #monitor record csv file
         csvtime=time.time()
-        #record file
         if dpid == 2 and csvtime>=GOGO_TIME and csvtime<=GOGO_TIME+240:
             with open(self.csv_throughput_record_file,'a') as csv_file:
                 row=[csvtime]  
