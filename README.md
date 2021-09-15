@@ -3,11 +3,16 @@
 下載資料集  
 https://www.unb.ca/cic/datasets/vpn.html  
 
+安裝python及所需的套件  
+
 預處理  
 classifer/preprocessingpcap.py  
+修改輸入輸出路徑  
 
 訓練model  
 classifer/sklearn.py
+修改輸入輸出路徑  
+修改訓練類型  
 
 將model儲存到資料夾  
 ryu/ryu/app/ryu_customapp/models/
@@ -15,8 +20,9 @@ ryu/ryu/app/ryu_customapp/models/
 安裝mininet和ryu  
 安裝python及所需的套件  
 
-修改設定  
+重播pcap  
 pg/gen/pkt_config/pkt_config.py  
+修改設定  
 修改產生封包的開始時間：timestring  
 修改pcap路徑：PKT_FILE_LIST  
 修改pcap對應的傳送間隔：PKT_FILE_MAP  
