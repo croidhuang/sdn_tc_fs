@@ -10,6 +10,8 @@ import sys
 sys.path.insert(1,'./pg/gen')
 from pkt_config.pkt_config import ONE_PKT_SIZE,INNTER_ARRIVAL_TIME,BUDGET_PKT_SIZE
 
+
+
 latency_statistic = INNTER_ARRIVAL_TIME
 bandpktsize_one_statistic = ONE_PKT_SIZE
 
@@ -88,9 +90,6 @@ def scheduler_hard_timeout(best,worst):
     latency_s_normalize = normalize_statistic(latency_statistic, "latency", 0, 1)
     bandpktsize_s_normalize = normalize_statistic(bandpktsize_statistic, "bandfree", 0, 1)
 
-    #print(f'latency={latency}')
-    #print(f'bandfree={bandfree}')
-    #print(f'flow={flow}')
     require=weighted_require(latency_s_normalize,bandpktsize_s_normalize,flow_d_normalize)
     timeout_s_normalize = normalize_statistic(dict(require), "timeout", best, worst)
     return timeout_s_normalize
@@ -139,31 +138,21 @@ def scheduler_algo(class_result,latency,bandfree,flow):
     if class_result==-1:
         return class_result
     try:
-        #print(f'class_result={class_result }')
         latency_s_normalize = normalize_statistic(latency_statistic, "latency", 0, 1)
         bandpktsize_s_normalize = normalize_statistic(bandpktsize_statistic, "bandfree", 0, 1)
 
-        #print(f'latency={latency}')
-        #print(f'bandfree={bandfree}')
-        #print(f'flow={flow}')
         latency_d_normalize = normalize_dynamic(latency, latency_statistic, "latency", 0, 1)
         bandfree_d_normalize = normalize_dynamic(bandfree, bandpktsize_statistic, "bandfree", 0, 1)
         flow_d_normalize = normalize_statistic(flow, "flow", 0, 1)
 
-        #print(f'latency_d_normalize={latency_d_normalize}')
-        #print(f'bandfree_d_normalize={bandfree_d_normalize}')
-        #print(f'flow_d_normalize={flow_d_normalize}')
         require=weighted_require(latency_s_normalize,bandpktsize_s_normalize,flow_d_normalize)
         quality=weighted_quality(latency_s_normalize,bandpktsize_s_normalize,latency_d_normalize,bandfree_d_normalize)
-        #print(f'require={require}')
-        #print(f'quality={quality}')
 
         #sort,(key, value)
         for i,r in enumerate(require):
             if r[0]==class_result:
                 nstlarge_require=i
 
-        #print(f'nstlarge_require={nstlarge_require }')
         if  nstlarge_require == 0:
             slice_num = quality[0][0]
         elif nstlarge_require > 0 and nstlarge_require < (len(require)-1):
