@@ -9,7 +9,6 @@ from mininet.cli import CLI
 from mininet.clean import Cleanup
 from mininet.log import setLogLevel, info, error
 from mininet.util import dumpNodeConnections
-from subprocess import call
 
 import sys
 sys.path.insert(1,'./pg/gen')
@@ -80,6 +79,7 @@ def myNetwork():
     dumpNodeConnections(net.hosts)
 
     """
+    #not work, need controller identify iperf
     info( "***Testing bandwidth\n" )
     testlist=[0]
     for i in range(1, int(hostq)+1):
@@ -88,7 +88,20 @@ def myNetwork():
     for i in range(1, int(hostq/2)+1):        
         testlist[i],testlist[i+7] = net.get(('h%s' % (i+0)), ('h%s' % (i+7)))
     """    
-    
+
+    """
+    #not work, it will wait at h1
+    for i in range(1, hostq+1):
+        HostList[i] = net.get( HostNum[i])
+
+    for i in range(1, hostq+1):
+        if i <=hostq/2:
+            HostList[i].cmdPrint("python3 pg/gen/client"+str(i)+".py")
+        elif i>hostq/2:
+            HostList[i].cmdPrint("python3 pg/gen/server"+str(i)+".py")
+        else:
+            break
+    """
     CLI(net)
 
     Cleanup.cleanup()
