@@ -10,9 +10,9 @@ import math
 
 CSV_OUTPUTPATH = './pg/timerecord/'
 
-SCHEDULER_TYPE = "random" #0,1,"random","MAX","min","algo",
+SCHEDULER_TYPE = "min" #0,1,"random","MAX","min","algo",
 
-timestring= "2021-09-15 16:03:00"
+timestring= "2021-09-15 23:36:00"
 structtime=time.strptime(timestring, "%Y-%m-%d %H:%M:%S")
 timestamp=float(time.mktime(structtime))
 print(timestamp)
@@ -26,7 +26,7 @@ SLEEP_PERIOD = 1
 
 # custom by your experimnet
 # if user > user_threshold will congestion
-user_threshold = 1.1
+user_threshold = 1
 # depand on your computer
 # if send interval < time_threshold will lag
 # ref orig time smallest value would be time_threshold
