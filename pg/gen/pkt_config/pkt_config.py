@@ -10,9 +10,9 @@ import math
 
 CSV_OUTPUTPATH = './pg/timerecord/'
 
-SCHEDULER_TYPE = 1 #0,1,"random","MAX","min","algo",
+SCHEDULER_TYPE = "random" #0,1,"random","MAX","min","algo",
 
-timestring= "2021-09-13 23:43:00"
+timestring= "2021-09-15 16:03:00"
 structtime=time.strptime(timestring, "%Y-%m-%d %H:%M:%S")
 timestamp=float(time.mktime(structtime))
 print(timestamp)
@@ -102,8 +102,9 @@ median
 
 #dict statistics from pcap
 ORIG_BW = {
+    #avg allbyte/alltime
     #0chat #1email #2file #3stream #4p2p #5voip #6browser
-    0 : 1533,     
+    0 : 624,     
     1 : 4485,     
     2 : 1029862,  
     3 : 245670,   
@@ -112,19 +113,20 @@ ORIG_BW = {
     6 : 19673,    
 }
 
-LIST_ONE_PKT_SIZE = {
-    #0chat #1email #2file #3stream #4p2p #5voip #6browser
-    0:92,
-    1:63,
-    2:1514,
-    3:1360, ###
-    4:1404,
-    5:149,
-    6:146,
-    }
-ONE_PKT_SIZE = {i:LIST_ONE_PKT_SIZE[PKT_FILE_MAP[i]] for i in LIST_ONE_PKT_SIZE}
+LIST_AVG_INTERVAL={
+    #avg alltime/allcount
+    0:0.514901,
+    1:0.510331,
+    2:0.001012,
+    3:0.017945,
+    4:0.003790,
+    5:0.011784,
+    6:0.058626,
+}
 
-"""
+LIST_ONE_PKT_SIZE = {
+    #median
+    #0chat #1email #2file #3stream #4p2p #5voip #6browser
     0:92,
     1:63,
     2:1514,
@@ -132,9 +134,18 @@ ONE_PKT_SIZE = {i:LIST_ONE_PKT_SIZE[PKT_FILE_MAP[i]] for i in LIST_ONE_PKT_SIZE}
     4:1404,
     5:149,
     6:146,
-"""
+    }
+
+#avg MUST CHECK you want avg or median
+for i,v in LIST_ONE_PKT_SIZE.items():
+    LIST_ONE_PKT_SIZE[i] = ORIG_BW[i] * LIST_AVG_INTERVAL[i]
+print(LIST_ONE_PKT_SIZE)
+#MUST CHECK you want avg or median
+ONE_PKT_SIZE = {i:LIST_ONE_PKT_SIZE[PKT_FILE_MAP[i]] for i in LIST_ONE_PKT_SIZE}
+
 
 LIST_INNTER_ARRIVAL_TIME={
+    #median
     #0chat #1email #2file #3stream #4p2p #5voip #6browser
     0:0.000001,
     1:0.000009,
@@ -146,38 +157,33 @@ LIST_INNTER_ARRIVAL_TIME={
 }
 INNTER_ARRIVAL_TIME = {i:LIST_INNTER_ARRIVAL_TIME[PKT_FILE_MAP[i]] for i in LIST_INNTER_ARRIVAL_TIME}
 
+
 """
 calculator
 """
 
+LIST_PKT_FILE_INTERVAL={}
+
+"""
 t=[]
 for i,v in LIST_ONE_PKT_SIZE.items():
     t.append((time_threshold+0.1)/LIST_ONE_PKT_SIZE[i]*ORIG_BW[i])
 t=sorted(t)
 wx=t[-2]
 
-"""
-t={}
-for i,j in ONE_PKT_SIZE.items():
-    for k,v in PKT_FILE_MAP.items():
-        if i ==v : 
-            t[i]=((time_threshold+0.1)/ONE_PKT_SIZE[i]*ORIG_BW[i])
-t=sorted(t.items(), key=lambda item:item[1])
-t=[i[1] for i in t]
-wx=t[-2]
-"""
-
-LIST_PKT_FILE_INTERVAL={}
-for i,v in ONE_PKT_SIZE.items():
+for i,v in LIST_ONE_PKT_SIZE.items():
     LIST_PKT_FILE_INTERVAL[i]=LIST_ONE_PKT_SIZE[i]/ORIG_BW[i]*wx
     if LIST_PKT_FILE_INTERVAL[i]<time_threshold:
         LIST_PKT_FILE_INTERVAL[i]=time_threshold
     LIST_PKT_FILE_INTERVAL[i]=LIST_PKT_FILE_INTERVAL[i]-(LIST_PKT_FILE_INTERVAL[i]%0.001)
 
-    if ONE_PKT_SIZE[i]>1500:
+    if LIST_ONE_PKT_SIZE[i]>1500:
         LIST_PKT_FILE_INTERVAL[i]=LIST_PKT_FILE_INTERVAL[i]/(ONE_PKT_SIZE[i]/1500)
         LIST_ONE_PKT_SIZE[i]=ONE_PKT_SIZE[i]/math.ceil(ONE_PKT_SIZE[i]/1500)
-ONE_PKT_SIZE = {i:LIST_ONE_PKT_SIZE[PKT_FILE_MAP[i]] for i in LIST_ONE_PKT_SIZE}
+        ONE_PKT_SIZE = {i:LIST_ONE_PKT_SIZE[PKT_FILE_MAP[i]] for i in LIST_ONE_PKT_SIZE}
+"""
+
+LIST_PKT_FILE_INTERVAL=LIST_AVG_INTERVAL
 
 PKT_FILE_INTERVAL= {i:LIST_PKT_FILE_INTERVAL[PKT_FILE_MAP[i]] for i in LIST_PKT_FILE_INTERVAL}
 if print_ctrl==1:
@@ -195,7 +201,7 @@ if print_ctrl==1:
 BW = {}
 for i in LIST_ONE_PKT_SIZE:
     c=float(1/LIST_PKT_FILE_INTERVAL[i])
-    BW[i]=float((user_threshold*LIST_ONE_PKT_SIZE[i]*c)/1000000*8)
+    BW[i]=float(user_threshold*LIST_ONE_PKT_SIZE[i]*c/1000000*8)
 if print_ctrl==1:
     print(BW)
 
@@ -207,7 +213,7 @@ if print_ctrl==1:
     print(BUDGET_BW)
 
 LIST_BUDGET_PKT_SIZE ={}
-for i in ONE_PKT_SIZE:
+for i in LIST_ONE_PKT_SIZE:
     c=float(SLEEP_PERIOD/LIST_PKT_FILE_INTERVAL[i])
     LIST_BUDGET_PKT_SIZE[i]=int(LIST_ONE_PKT_SIZE[i]*c)
 BUDGET_PKT_SIZE= {i:LIST_BUDGET_PKT_SIZE[PKT_FILE_MAP[i]] for i in LIST_BUDGET_PKT_SIZE}
@@ -215,7 +221,7 @@ if print_ctrl==1:
     print(BUDGET_PKT_SIZE)
 
 LIST_RESULT={}
-for i in ONE_PKT_SIZE:    
+for i in LIST_ONE_PKT_SIZE:    
     LIST_RESULT[i]=int(LIST_ONE_PKT_SIZE[i]*LIST_NUM_PKT[i])
 RESULT= {i:LIST_RESULT[PKT_FILE_MAP[i]] for i in LIST_RESULT}
 if print_ctrl==1:
