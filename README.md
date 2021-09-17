@@ -6,11 +6,11 @@ https://www.unb.ca/cic/datasets/vpn.html
 安裝python及所需的套件  
 
 預處理  
-classifer/preprocessingpcap.py  
+classifier/preprocessingpcap.py  
 修改輸入輸出路徑  
 
 訓練model  
-classifer/sklearn.py
+classifier/sklearn.py
 修改輸入輸出路徑  
 修改訓練類型  
 
@@ -21,7 +21,7 @@ ryu/ryu/app/ryu_customapp/models/
 安裝python及所需的套件  
 
 重播pcap  
-pktgen/gen/pkt_config/pkt_config.py  
+exp_config/exp_config.py  
 修改設定  
 修改產生封包的開始時間：timestring  
 修改pcap路徑：PKT_FILE_LIST  
