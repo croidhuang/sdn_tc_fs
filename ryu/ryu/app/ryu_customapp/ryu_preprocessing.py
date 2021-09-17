@@ -1,3 +1,7 @@
+#reference
+#https://github.com/munhouiani/Deep-Packet
+#author munhouiani
+
 #https://docs.python.org/3/library/pathlib.html 使路徑適合各種OS
 from pathlib import Path
 
