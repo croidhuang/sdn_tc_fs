@@ -1,3 +1,8 @@
+#reference
+#https://github.com/munhouiani/Deep-Packet
+#author munhouiani
+
+
 #https://docs.python.org/3/library/pathlib.html 使路徑適合各種OS
 from pathlib import Path
 
@@ -198,7 +203,7 @@ def transform_pcap(path, output_path: Path = None, output_batch_size=10000):
     print(output_path, 'Done')
 
 
-def main(source, target, njob):
+def main(source, target):
     data_dir_path = Path(source)
     target_dir_path = Path(target)
     target_dir_path.mkdir(parents=True, exist_ok=True)
@@ -208,4 +213,4 @@ def main(source, target, njob):
 
 
 if __name__ == '__main__':
-    main(source, target, njob)
+    main(source, target)
