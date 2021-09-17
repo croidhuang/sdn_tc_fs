@@ -7,8 +7,8 @@ import random
 from random import choice
 
 import sys
-sys.path.insert(1,'./pg/gen')
-from pkt_config.pkt_config import ONE_PKT_SIZE,INNTER_ARRIVAL_TIME,BUDGET_PKT_SIZE
+sys.path.insert(1,'./')
+from exp_config.exp_config import ONE_PKT_SIZE,INNTER_ARRIVAL_TIME,BUDGET_PKT_SIZE
 
 
 
