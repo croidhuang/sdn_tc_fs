@@ -11,8 +11,8 @@ from mininet.log import setLogLevel, info, error
 from mininet.util import dumpNodeConnections
 
 import sys
-sys.path.insert(1,'./pg/gen')
-from pkt_config.pkt_config import BW
+sys.path.insert(1,'./')
+from exp_config.exp_config import BW
 
 SliceNum=7
 hostq=SliceNum*2
