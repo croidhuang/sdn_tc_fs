@@ -10,7 +10,7 @@ classifier/preprocessingpcap.py
 修改輸入輸出路徑  
 
 訓練model  
-classifier/sklearn.py
+classifier/sklearn.py  
 修改輸入輸出路徑  
 修改訓練類型  
 
