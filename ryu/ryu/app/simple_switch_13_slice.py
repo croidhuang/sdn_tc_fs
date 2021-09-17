@@ -41,8 +41,8 @@ from ryu.lib import ofctl_v1_3
 from ryu_customapp import ryu_preprocessing, ryu_scheduler
 
 import sys
-sys.path.insert(1,'./pg/gen')
-from pkt_config.pkt_config import SLEEP_PERIOD,LIST_BUDGET_PKT_SIZE,BUDGET_BW,GOGO_TIME,SCHEDULER_TYPE,PKT_FILE_MAP
+sys.path.insert(1,'./')
+from exp_config.exp_config import SLEEP_PERIOD,LIST_BUDGET_PKT_SIZE,BUDGET_BW,GOGO_TIME,SCHEDULER_TYPE,PKT_FILE_MAP
 
 #sklearn
 from ryu.lib import pcaplib
