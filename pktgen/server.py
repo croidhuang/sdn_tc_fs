@@ -7,7 +7,6 @@ import inspect
 import time
 from collections import Counter
 from pathlib import Path
-import csv
 
 import sys
 sys.path.insert(1,'./')
@@ -130,11 +129,10 @@ def sendp_flow(i,sendp_count):
             time.sleep(waittime)
     elif pkt_ctrl[i][pkt_socket]==1:
         print(f'wait={pkt_socket}')
-        sniff_flow(i,chk_socket,timer,waittime-(1e-05))
+        waittime=sniff_flow(i,chk_socket,timer,waittime-(1e-05))
         timerecord[i][j]=(time.time())
         sendp_count+=1
         
-        waittime=waittime-(time.time()-timer)
         if waittime>0:
                 time.sleep(waittime)
     return sendp_count
@@ -155,7 +153,7 @@ def sniff_flow(i,wait_socket,timer,waittime):
             print(f'{pkt_socket}!={wait_socket}')
             waittime=waittime-(time.time()-timer) 
             continue
-    return 0
+    return waittime
 
 def cnt_flow(i):
     sendp_count=0
@@ -173,6 +171,6 @@ def main():
 if __name__ =='__main__':
     timestamp=float(time.time())
     time.sleep(GOGO_TIME-timestamp-10)
-    while timestamp<GOGO_TIME:
-        timestamp=float(time.time())
+    while (timestamp := float(time.time()) ) < GOGO_TIME:
+        pass
     main()
