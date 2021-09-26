@@ -40,18 +40,18 @@ ryu-manager ryu/ryu/app/simple_switch_13_slice.py
 mininet> xterm h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14  
   
 在h1執行  
-python3 pktgen/gen/client1.py  
+python3 pktgen/cs/client1.py  
 在h2執行  
-python3 pktgen/gen/client2.py  
+python3 pktgen/cs/client2.py  
 在h3執行  
-python3 pktgen/gen/client3.py  
+python3 pktgen/cs/client3.py  
 ...  
 在h8執行  
-python3 pktgen/gen/server8.py  
+python3 pktgen/cs/server8.py  
 在h9執行  
-python3 pktgen/gen/server9.py  
+python3 pktgen/cs/server9.py  
 在h10執行  
-python3 pktgen/gen/server10.py  
+python3 pktgen/cs/server10.py  
 ...  
   
 等待讀取pcap直到出現ready  
