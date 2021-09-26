@@ -3,7 +3,7 @@
 下載資料集  
 https://www.unb.ca/cic/datasets/vpn.html  
 
-安裝python及所需的套件  
+安裝python3及所需的套件  
 
 預處理(輸入pcap, 輸出parquet)  
 classifier/preprocessing_pcap.py  
@@ -22,7 +22,7 @@ classifier/train_test_sklearn.py
 ryu/ryu/app/ryu_customapp/models/
 
 安裝mininet和ryu  
-安裝python及所需的套件  
+安裝python3及所需的套件  
 
 重播pcap  
 exp_config/exp_config.py  
