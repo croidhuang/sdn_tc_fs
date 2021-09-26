@@ -49,8 +49,7 @@ import csv
 import sys
 
 sys.path.insert(1, './')
-from exp_config.exp_config import SLEEP_PERIOD, LIST_BUDGET_PKT_SIZE, BUDGET_BW, GOGO_TIME, SCHEDULER_TYPE, PKT_FILE_MAP
-
+from exp_config.exp_config import SLEEP_PERIOD, orig_BUDGET_PKT_SIZE, BUDGET_BW, GOGO_TIME, SCHEDULER_TYPE, PKT_FILE_MAP
 
 
 class SimpleSwitch13(app_manager.RyuApp):
@@ -84,29 +83,29 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.LatencyPrint_ctrl = 0
 
         #function_ctrl only scheduler and monitor =1
-        self.classifier_ctrl = 0  # allright by ip=0, classification by model=1
-        self.scheuduler_ctrl = SCHEDULER_TYPE  # 0, 1, "random", "MAX", "min", "algo",
+        self.Classifier_ctrl = 0  # allright by ip=0, classification by model=1
+        self.Scheuduler_ctrl = SCHEDULER_TYPE  # 0, 1, "random", "MAX", "min", "algo",
         self.FlowMatch_ctrl = 0
         self.Monitor_ctrl = 1
         self.Latency_ctrl = 0
         self.UpdateBudget_ctrl = 0
 
         #manual
-        #topo
+        #topo check it same with mininet
         self.SliceNum = 7
         self.Host1half = 7
         self.Host2half = 7
-        self.hostq = self.Host1half + self.Host2half
-        self.switchq = 1 + self.SliceNum + 1
+        self.HostTotal = self.Host1half + self.Host2half
+        self.SwitchTotal = 1 + self.SliceNum + 1
 
         #for classifier
         self.loaded_model = joblib.load(
             './ryu/ryu/app/ryu_customapp/models/b255v6 RandomForest choice_random=0.004 train_size=0.8 test_size=0.2 choice_split=3 choice_train=2 1630563027.216647.pkl'
         )
-        self.PacketCount = 0
-        self.ClassCount = {i: 0 for i in range(self.SliceNum)}
+        self.packet_count = 0
+        self.class_count = {i: 0 for i in range(self.SliceNum)}
         #[-1]=unknown class
-        self.ClassCount[-1] = 0
+        self.class_count[-1] = 0
         self.pcap_writer = pcaplib.Writer(open('mypcap.pcap', 'wb'),
                                           snaplen=80)
 
@@ -192,48 +191,22 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.sleep_period = SLEEP_PERIOD
         if self.Monitor_ctrl == 1:
             self.monitor_thread = hub.spawn(self._monitor)
-        self.port_ctrl = {
-            'prev_tx_bytes': {
-                1: {},
-                2: {}
-            },
-            'prev_rx_bytes': {
-                1: {},
-                2: {}
-            },
-            'prev_tx_packets': {
-                1: {},
-                2: {}
-            },
-            'prev_rx_packets': {
-                1: {},
-                2: {}
-            },
-            'Tx_flow': {
-                1: {
-                    4294967294: 0
-                },
-                2: {
-                    4294967294: 0
-                },
-            },
-            'Rx_flow': {
-                1: {
-                    4294967294: 0
-                },
-                2: {
-                    4294967294: 0
-                },
-            },
+        self.moniter_record = {            
+            'prev_tx_bytes': {1: {}, 2: {}},
+            'prev_rx_bytes': {1: {}, 2: {}},
+            'prev_tx_packets': {1: {}, 2: {}},
+            'prev_rx_packets': {1: {}, 2: {}},
+            'Tx_flow': {1: {4294967294: 0}, 2: {4294967294: 0}, },
+            'Rx_flow': {1: {4294967294: 0}, 2: {4294967294: 0}, },
         }
         for dpid in range(1, 2 + 1):
             for i in range(2 * self.SliceNum + 1):
-                self.port_ctrl['prev_tx_bytes'][dpid][i] = 0
-                self.port_ctrl['prev_rx_bytes'][dpid][i] = 0
-                self.port_ctrl['prev_tx_packets'][dpid][i] = 0
-                self.port_ctrl['prev_rx_packets'][dpid][i] = 0
-                self.port_ctrl['Tx_flow'][dpid][i] = 0
-                self.port_ctrl['Rx_flow'][dpid][i] = 0
+                self.moniter_record['prev_tx_bytes'][dpid][i] = 0
+                self.moniter_record['prev_rx_bytes'][dpid][i] = 0
+                self.moniter_record['prev_tx_packets'][dpid][i] = 0
+                self.moniter_record['prev_rx_packets'][dpid][i] = 0
+                self.moniter_record['Tx_flow'][dpid][i] = 0
+                self.moniter_record['Rx_flow'][dpid][i] = 0
 
         self.bandwidth = BUDGET_BW
         self.bandwidth[-1] = 1
@@ -241,12 +214,12 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.bandfree[1] = {i: BUDGET_BW[i] for i in range(self.SliceNum)}
         self.bandfree[2] = {i: BUDGET_BW[i] for i in range(self.SliceNum)}
         print(self.bandfree)
-        self.bandpktsize = LIST_BUDGET_PKT_SIZE
+        self.bandpktsize = orig_BUDGET_PKT_SIZE
         self.bandpktsize[-1] = 60
         print(self.bandpktsize)
 
         #latency
-        self.innerdelay = {i: 0 for i in range(self.switchq + 1)}
+        self.innerdelay = {i: 0 for i in range(self.SwitchTotal + 1)}
         self.ping_monitor_timestamp = {}
         self.ping_req_timestamp = {}
         self.ping_reqin_timestamp = {}
@@ -267,56 +240,56 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.dstmac_to_port[1] = {}
         self.srcmac_to_port[1] = {}
         for i in range(1, int(self.Host1half + 1)):
-            PortS1left = i
-            PortS1right = i + self.Host1half
-            Host1half = i
-            Host1halfMAC = "00:00:00:00:00:" + str(
-                hex(Host1half).lstrip("0x")).zfill(2)
-            self.dstmac_to_port[1][Host1halfMAC] = PortS1left
-            self.srcmac_to_port[1][Host1halfMAC] = PortS1right
-        for i in range(self.Host1half + 1, int(self.hostq + 1)):
-            PortS1left = i - self.Host1half
-            PortS1right = i
-            Host2half = i
-            Host2halfMAC = "00:00:00:00:00:" + str(
-                hex(Host2half).lstrip("0x")).zfill(2)
-            self.dstmac_to_port[1][Host2halfMAC] = PortS1right
-            self.srcmac_to_port[1][Host2halfMAC] = PortS1left
+            port_s1_left = i
+            port_s1_right = i + self.Host1half
+            host_1half_i = i
+            host_1half_MAC = "00:00:00:00:00:" + str(
+                hex(host_1half_i).lstrip("0x")).zfill(2)
+            self.dstmac_to_port[1][host_1half_MAC] = port_s1_left
+            self.srcmac_to_port[1][host_1half_MAC] = port_s1_right
+        for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+            port_s1_left = i - self.Host1half
+            port_s1_right = i
+            host_2half_i = i
+            host_2half_MAC = "00:00:00:00:00:" + str(
+                hex(host_2half_i).lstrip("0x")).zfill(2)
+            self.dstmac_to_port[1][host_2half_MAC] = port_s1_right
+            self.srcmac_to_port[1][host_2half_MAC] = port_s1_left
         #s2
         self.dstmac_to_port[2] = {}
         self.srcmac_to_port[2] = {}
         for i in range(1, int(self.Host1half + 1)):
-            PortS2left = i + self.Host2half
-            PortS2right = i
-            Host1half = i
-            Host1halfMAC = "00:00:00:00:00:" + str(
-                hex(Host1half).lstrip("0x")).zfill(2)
-            self.dstmac_to_port[2][Host1halfMAC] = PortS2left
-            self.srcmac_to_port[2][Host1halfMAC] = PortS2right
-        for i in range(self.Host1half + 1, int(self.hostq + 1)):
-            PortS2left = i
-            PortS2right = i - self.Host2half
-            Host2half = i
-            Host2halfMAC = "00:00:00:00:00:" + str(
-                hex(Host2half).lstrip("0x")).zfill(2)
-            self.dstmac_to_port[2][Host2halfMAC] = PortS2right
-            self.srcmac_to_port[2][Host2halfMAC] = PortS2left
+            port_s2_left = i + self.Host2half
+            port_s2_right = i
+            host_1half_i = i
+            host_1half_MAC = "00:00:00:00:00:" + str(
+                hex(host_1half_i).lstrip("0x")).zfill(2)
+            self.dstmac_to_port[2][host_1half_MAC] = port_s2_left
+            self.srcmac_to_port[2][host_1half_MAC] = port_s2_right
+        for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+            port_s2_left = i
+            port_s2_right = i - self.Host2half
+            host_2half_i = i
+            host_2half_MAC = "00:00:00:00:00:" + str(
+                hex(host_2half_i).lstrip("0x")).zfill(2)
+            self.dstmac_to_port[2][host_2half_MAC] = port_s2_right
+            self.srcmac_to_port[2][host_2half_MAC] = port_s2_left
         #switch link switch
         for j in range(1 + 2, self.SliceNum + 2 + 1):
             self.dstmac_to_port[j] = {}
             self.srcmac_to_port[j] = {}
             for i in range(1, int(self.Host1half + 1)):
-                Host1half = i
-                Host1halfMAC = "00:00:00:00:00:" + str(
-                    hex(Host1half).lstrip("0x")).zfill(2)
-                self.dstmac_to_port[j][Host1halfMAC] = 1
-                self.srcmac_to_port[j][Host1halfMAC] = 2
-            for i in range(self.Host1half + 1, int(self.hostq + 1)):
-                Host2half = i
-                Host2halfMAC = "00:00:00:00:00:" + str(
-                    hex(Host2half).lstrip("0x")).zfill(2)
-                self.dstmac_to_port[j][Host2halfMAC] = 2
-                self.srcmac_to_port[j][Host2halfMAC] = 1
+                host_1half_i = i
+                host_1half_MAC = "00:00:00:00:00:" + str(
+                    hex(host_1half_i).lstrip("0x")).zfill(2)
+                self.dstmac_to_port[j][host_1half_MAC] = 1
+                self.srcmac_to_port[j][host_1half_MAC] = 2
+            for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+                host_2half_i = i
+                host_2half_MAC = "00:00:00:00:00:" + str(
+                    hex(host_2half_i).lstrip("0x")).zfill(2)
+                self.dstmac_to_port[j][host_2half_MAC] = 2
+                self.srcmac_to_port[j][host_2half_MAC] = 1
 
         # dict_to_outport
         # IP
@@ -326,50 +299,50 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.dstipv4_to_port[1] = {}
         self.srcipv4_to_port[1] = {}
         for i in range(1, int(self.Host1half + 1)):
-            PortS1left = i
-            PortS1right = i + self.Host1half
-            Host1half = i
-            Host1halfIP = "10.0.0." + str(Host1half).zfill(1)
-            self.dstipv4_to_port[1][Host1halfIP] = PortS1left
-            self.srcipv4_to_port[1][Host1halfIP] = PortS1right
-        for i in range(self.Host1half + 1, int(self.hostq + 1)):
-            PortS1left = i - self.Host1half
-            PortS1right = i
-            Host2half = i
-            Host2halfIP = "10.0.0." + str(Host2half).zfill(1)
-            self.dstipv4_to_port[1][Host2halfIP] = PortS1right
-            self.srcipv4_to_port[1][Host2halfIP] = PortS1left
+            port_s1_left = i
+            port_s1_right = i + self.Host1half
+            host_1half_i = i
+            host_1half_IP = "10.0.0." + str(host_1half_i).zfill(1)
+            self.dstipv4_to_port[1][host_1half_IP] = port_s1_left
+            self.srcipv4_to_port[1][host_1half_IP] = port_s1_right
+        for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+            port_s1_left = i - self.Host1half
+            port_s1_right = i
+            host_2half_i = i
+            host_2half_IP = "10.0.0." + str(host_2half_i).zfill(1)
+            self.dstipv4_to_port[1][host_2half_IP] = port_s1_right
+            self.srcipv4_to_port[1][host_2half_IP] = port_s1_left
         #s2
         self.dstipv4_to_port[2] = {}
         self.srcipv4_to_port[2] = {}
         for i in range(1, int(self.Host1half + 1)):
-            PortS2left = i + self.Host2half
-            PortS2right = i
-            Host1half = i
-            Host1halfIP = "10.0.0." + str(Host1half).zfill(1)
-            self.dstipv4_to_port[2][Host1halfIP] = PortS2left
-            self.srcipv4_to_port[2][Host1halfIP] = PortS2right
-        for i in range(self.Host1half + 1, int(self.hostq + 1)):
-            PortS2left = i
-            PortS2right = i - self.Host2half
-            Host2half = i
-            Host2halfIP = "10.0.0." + str(Host2half).zfill(1)
-            self.dstipv4_to_port[2][Host2halfIP] = PortS2right
-            self.srcipv4_to_port[2][Host2halfIP] = PortS2left
+            port_s2_left = i + self.Host2half
+            port_s2_right = i
+            host_1half_i = i
+            host_1half_IP = "10.0.0." + str(host_1half_i).zfill(1)
+            self.dstipv4_to_port[2][host_1half_IP] = port_s2_left
+            self.srcipv4_to_port[2][host_1half_IP] = port_s2_right
+        for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+            port_s2_left = i
+            port_s2_right = i - self.Host2half
+            host_2half_i = i
+            host_2half_IP = "10.0.0." + str(host_2half_i).zfill(1)
+            self.dstipv4_to_port[2][host_2half_IP] = port_s2_right
+            self.srcipv4_to_port[2][host_2half_IP] = port_s2_left
         #switch link switch
         for j in range(1 + 2, self.SliceNum + 2 + 1):
             self.dstipv4_to_port[j] = {}
             self.srcipv4_to_port[j] = {}
             for i in range(1, int(self.Host1half + 1)):
-                Host1half = i
-                Host1halfIP = "10.0.0." + str(Host1half).zfill(1)
-                self.dstipv4_to_port[j][Host1halfIP] = 1
-                self.srcipv4_to_port[j][Host1halfIP] = 2
-            for i in range(self.Host1half + 1, int(self.hostq + 1)):
-                Host2half = i
-                Host2halfIP = "10.0.0." + str(Host2half).zfill(1)
-                self.dstipv4_to_port[j][Host2halfIP] = 2
-                self.srcipv4_to_port[j][Host2halfIP] = 1
+                host_1half_i = i
+                host_1half_IP = "10.0.0." + str(host_1half_i).zfill(1)
+                self.dstipv4_to_port[j][host_1half_IP] = 1
+                self.srcipv4_to_port[j][host_1half_IP] = 2
+            for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+                host_2half_i = i
+                host_2half_IP = "10.0.0." + str(host_2half_i).zfill(1)
+                self.dstipv4_to_port[j][host_2half_IP] = 2
+                self.srcipv4_to_port[j][host_2half_IP] = 1
 
         # dict_to_outport
         # PORT
@@ -379,50 +352,50 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.outport_to_port[1] = {}
         self.inport_to_port[1] = {}
         for i in range(1, int(self.Host1half + 1)):
-            PortS1left = i
-            PortS1right = i + self.Host1half
-            Host1half = i
-            Host1halfPORT = str(Host1half).zfill(1)
-            self.outport_to_port[1][Host1halfPORT] = PortS1left
-            self.inport_to_port[1][Host1halfPORT] = PortS1right
-        for i in range(self.Host1half + 1, int(self.hostq + 1)):
-            PortS1left = i - self.Host1half
-            PortS1right = i
-            Host2half = i
-            Host2halfPORT = str(Host2half).zfill(1)
-            self.outport_to_port[1][Host2halfPORT] = PortS1right
-            self.inport_to_port[1][Host2halfPORT] = PortS1left
+            port_s1_left = i
+            port_s1_right = i + self.Host1half
+            host_1half_i = i
+            host_1half_PORT = str(host_1half_i).zfill(1)
+            self.outport_to_port[1][host_1half_PORT] = port_s1_left
+            self.inport_to_port[1][host_1half_PORT] = port_s1_right
+        for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+            port_s1_left = i - self.Host1half
+            port_s1_right = i
+            host_2half_i = i
+            host_2half_PORT = str(host_2half_i).zfill(1)
+            self.outport_to_port[1][host_2half_PORT] = port_s1_right
+            self.inport_to_port[1][host_2half_PORT] = port_s1_left
         #s2
         self.outport_to_port[2] = {}
         self.inport_to_port[2] = {}
         for i in range(1, int(self.Host1half + 1)):
-            PortS2left = i + self.Host2half
-            PortS2right = i
-            Host1half = i
-            Host1halfPORT = str(Host1half).zfill(1)
-            self.outport_to_port[2][Host1halfPORT] = PortS2left
-            self.inport_to_port[2][Host1halfPORT] = PortS2right
-        for i in range(self.Host1half + 1, int(self.hostq + 1)):
-            PortS2left = i
-            PortS2right = i - self.Host2half
-            Host2half = i
-            Host2halfPORT = str(Host2half).zfill(1)
-            self.outport_to_port[2][Host2halfPORT] = PortS2right
-            self.inport_to_port[2][Host2halfPORT] = PortS2left
+            port_s2_left = i + self.Host2half
+            port_s2_right = i
+            host_1half_i = i
+            host_1half_PORT = str(host_1half_i).zfill(1)
+            self.outport_to_port[2][host_1half_PORT] = port_s2_left
+            self.inport_to_port[2][host_1half_PORT] = port_s2_right
+        for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+            port_s2_left = i
+            port_s2_right = i - self.Host2half
+            host_2half_i = i
+            host_2half_PORT = str(host_2half_i).zfill(1)
+            self.outport_to_port[2][host_2half_PORT] = port_s2_right
+            self.inport_to_port[2][host_2half_PORT] = port_s2_left
         #switch link switch
         for j in range(1 + 2, self.SliceNum + 2 + 1):
             self.outport_to_port[j] = {}
             self.inport_to_port[j] = {}
             for i in range(1, int(self.Host1half + 1)):
-                Host1half = i
-                Host1halfPORT = str(Host1half).zfill(1)
-                self.outport_to_port[j][Host1halfPORT] = 1
-                self.inport_to_port[j][Host1halfPORT] = 2
-            for i in range(self.Host1half + 1, int(self.hostq + 1)):
-                Host2half = i
-                Host2halfPORT = str(Host2half).zfill(1)
-                self.outport_to_port[j][Host2halfPORT] = 2
-                self.inport_to_port[j][Host2halfPORT] = 1
+                host_1half_i = i
+                host_1half_PORT = str(host_1half_i).zfill(1)
+                self.outport_to_port[j][host_1half_PORT] = 1
+                self.inport_to_port[j][host_1half_PORT] = 2
+            for i in range(self.Host1half + 1, int(self.HostTotal + 1)):
+                host_2half_i = i
+                host_2half_PORT = str(host_2half_i).zfill(1)
+                self.outport_to_port[j][host_2half_PORT] = 2
+                self.inport_to_port[j][host_2half_PORT] = 1
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -431,10 +404,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         parser = datapath.ofproto_parser
 
         match = parser.OFPMatch()
-        actions = [
-            parser.OFPActionOutput(ofproto.OFPP_CONTROLLER,
-                                   ofproto.OFPCML_NO_BUFFER)
-        ]
+        actions = [parser.OFPActionOutput(ofproto.OFPP_CONTROLLER, ofproto.OFPCML_NO_BUFFER)]
         hard_timeout = 0
         self.add_flow(datapath=datapath,
                       priority=0,
@@ -447,9 +417,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
-        inst = [
-            parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)
-        ]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath,
                                     command=datapath.ofproto.OFPFC_ADD,
@@ -483,70 +451,52 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     def _out_port_group(self, dpid, out_port, class_result):
         slice_num = class_result
-        if self.scheuduler_ctrl == 0:
+        if self.Scheuduler_ctrl == 0:
             return out_port
         elif class_result == -1:
             return out_port
 
-        elif dpid == 1 and out_port >= self.slice_to_dstport[dpid][
-                0] and out_port <= self.slice_to_dstport[dpid][self.SliceNum -
-                                                               1]:
-            flow = {i: self.ClassCount[i] for i in self.ClassCount if i != -1}
+        elif dpid == 1 and out_port >= self.slice_to_dstport[dpid][0] and out_port <= self.slice_to_dstport[dpid][self.SliceNum - 1]:
+            flow = {i: self.class_count[i] for i in self.class_count if i != -1}
             latency = self.latency[dpid]
             bandfree = self.bandfree[dpid]
 
-            if self.scheuduler_ctrl == 1 or self.bandfree[dpid][
-                    class_result] > self.bandpktsize[class_result]:
+            if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] > self.bandpktsize[class_result]:
                 slice_num = class_result
-            elif self.scheuduler_ctrl == "random":
-                slice_num = ryu_scheduler.random_algo(class_result, latency,
-                                                      bandfree, flow)
-            elif self.scheuduler_ctrl == "MAX":
-                slice_num = ryu_scheduler.MAX_algo(class_result, latency,
-                                                   bandfree, flow)
-            elif self.scheuduler_ctrl == "min":
-                slice_num = ryu_scheduler.min_algo(class_result, latency,
-                                                   bandfree, flow)
-            elif self.scheuduler_ctrl == "algo":
-                slice_num = ryu_scheduler.scheduler_algo(
-                    class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "random":
+                slice_num = ryu_scheduler.random_algo(class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "MAX":
+                slice_num = ryu_scheduler.MAX_algo(class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "min":
+                slice_num = ryu_scheduler.min_algo(class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "algo":
+                slice_num = ryu_scheduler.scheduler_algo(class_result, latency, bandfree, flow)
             else:
                 slice_num = class_result
 
             out_port = self.slice_to_dstport[dpid][slice_num]
 
-        elif dpid == 1 and out_port >= self.slice_to_srcport[dpid][
-                0] and out_port <= self.slice_to_srcport[dpid][self.SliceNum -
-                                                               1]:
+        elif dpid == 1 and out_port >= self.slice_to_srcport[dpid][0] and out_port <= self.slice_to_srcport[dpid][self.SliceNum - 1]:
             return out_port
 
-        elif dpid == 2 and out_port >= self.slice_to_dstport[dpid][
-                0] and out_port <= self.slice_to_dstport[dpid][self.SliceNum -
-                                                               1]:
+        elif dpid == 2 and out_port >= self.slice_to_dstport[dpid][0] and out_port <= self.slice_to_dstport[dpid][self.SliceNum - 1]:
             return out_port
 
-        elif dpid == 2 and out_port >= self.slice_to_srcport[dpid][
-                0] and out_port <= self.slice_to_srcport[dpid][self.SliceNum -
-                                                               1]:
-            flow = {i: self.ClassCount[i] for i in self.ClassCount if i != -1}
+        elif dpid == 2 and out_port >= self.slice_to_srcport[dpid][0] and out_port <= self.slice_to_srcport[dpid][self.SliceNum - 1]:
+            flow = {i: self.class_count[i] for i in self.class_count if i != -1}
             latency = self.latency[dpid]
             bandfree = self.bandfree[dpid]
 
-            if self.scheuduler_ctrl == 1 or self.bandfree[dpid][
-                    class_result] > self.bandpktsize[class_result]:
+            if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] > self.bandpktsize[class_result]:
                 slice_num = class_result
-            elif self.scheuduler_ctrl == "random":
-                slice_num = ryu_scheduler.random_algo(class_result, latency,
-                                                      bandfree, flow)
-            elif self.scheuduler_ctrl == "MAX":
-                slice_num = ryu_scheduler.MAX_algo(class_result, latency,
-                                                   bandfree, flow)
-            elif self.scheuduler_ctrl == "min":
-                slice_num = ryu_scheduler.min_algo(class_result, latency,
-                                                   bandfree, flow)
-            elif self.scheuduler_ctrl == "algo":
-                slice_num = ryu_scheduler.scheduler_algo(
-                    class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "random":
+                slice_num = ryu_scheduler.random_algo(class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "MAX":
+                slice_num = ryu_scheduler.MAX_algo(class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "min":
+                slice_num = ryu_scheduler.min_algo(class_result, latency, bandfree, flow)
+            elif self.Scheuduler_ctrl == "algo":
+                slice_num = ryu_scheduler.scheduler_algo(class_result, latency, bandfree, flow)
             else:
                 slice_num = class_result
 
@@ -663,30 +613,24 @@ class SimpleSwitch13(app_manager.RyuApp):
                 dst_port = udp_dst
             break
 
-        self.PacketCount += 1
+        self.packet_count += 1
         if self.AllPacketInfo_ctrl == 1:
-            self.logger.info(
-                " == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == ="
-            )
+            self.logger.info("---------------------------------------------------------------------------------------")
             self.logger.info(
                 'Count switch in_port eth_src           eth_dst           ip_src         ip_dst'
             )
             self.logger.info(
                 '{0:>5} {1:>6} {2:>7} {3:>17} {4:>17} {5:<8}:{6:>5} {7:<8}:{8:>5}'
-                .format(self.PacketCount, dpid, in_port, eth_src, eth_dst,
+                .format(self.packet_count, dpid, in_port, eth_src, eth_dst,
                         ip_src, src_port, ip_dst, dst_port))
-            self.logger.info(
-                " == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == ="
-            )
+            self.logger.info("---------------------------------------------------------------------------------------")
 
         #monitor ping
         if self.Latency_ctrl == 1:
             try:
                 id_icmp = pkt.get_protocols(icmp.icmp)[0]
                 if id_icmp.type == icmp.ICMP_ECHO_REQUEST:
-                    if dpid >= self.slice_to_dpid[
-                            0] and dpid <= self.slice_to_dpid[self.SliceNum -
-                                                              1]:
+                    if dpid >= self.slice_to_dpid[0] and dpid <= self.slice_to_dpid[self.SliceNum - 1]:
                         ping_id = id_icmp.data.id
                         self.ping_reqin_timestamp[dpid] = time.time()
 
@@ -697,15 +641,13 @@ class SimpleSwitch13(app_manager.RyuApp):
                         self._send_ping(src_dpid=dpid, dst_dpid=1, data=data)
                         self.ping_rly_timestamp[dpid] = time.time()
 
-                        innerdelay = self.innerdelay[1] + self.innerdelay[
-                            ping_id]
+                        innerdelay = self.innerdelay[1] + self.innerdelay[ping_id]
                         monitor = self.ping_monitor_timestamp[ping_id]
 
                         req = self.ping_req_timestamp[ping_id]
                         reqin = self.ping_reqin_timestamp[ping_id]
                         latency_req = reqin - req - innerdelay
-                        self.latency[1][
-                            self.dpid_to_slice[ping_id]] = latency_req
+                        self.latency[1][self.dpid_to_slice[ping_id]] = latency_req
 
                         #for classifier
                         ICMP_ctrl = 0
@@ -732,19 +674,14 @@ class SimpleSwitch13(app_manager.RyuApp):
                         loadbar = str('')
                         for i in range(int(avg) * 5):
                             loadbar = loadbar + '■'
-                        self.logger.info(
-                            " == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == ="
-                        )
-                        self.logger.info(
-                            f'{id} avg latency   request    reply     ')
+                        self.logger.info("---------------------------------------------------------------------------------------")
+                        self.logger.info(f'{id} avg latency   request    reply     ')
                         self.logger.info(
                             '{0:<4.3f}{1:<10} {2:<10.3f} {3:<10.3f}'.format(
                                 avg, loadbar,
                                 self.latency[1][self.dpid_to_slice[ping_id]],
                                 self.latency[2][self.dpid_to_slice[ping_id]]))
-                        self.logger.info(
-                            " == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == == ="
-                        )
+                        self.logger.info("---------------------------------------------------------------------------------------")
                     """
                     self.innerdelay[ping_id]=0
                     self.ping_monitor_timestamp[ping_id]=0
@@ -768,7 +705,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         if L3_ctrl == 1 and L4_ctrl == 1 and ICMP_ctrl == 1:
             try:
                 #for classifier
-                if self.classifier_ctrl == 1:
+                if self.Classifier_ctrl == 1:
                     app_result = self.loaded_model.predict(X_test)
                     class_result = self.app_to_service[app_result]
                 else:
@@ -780,14 +717,12 @@ class SimpleSwitch13(app_manager.RyuApp):
                         slicei = i - 1
                         class_result = int(PKT_FILE_MAP[slicei])
                 #for scheduler
-                self.ClassCount[class_result] += 1
+                self.class_count[class_result] += 1
                 if self.ClassPrint_ctrl == 1:
-                    print(
-                        f'class={self.service_to_string[class_result]} count={self.ClassCount[class_result]}'
-                    )
+                    print(f'class={self.service_to_string[class_result]} count={self.class_count[class_result]}')
             except:
                 class_result = -1
-                self.ClassCount[class_result] += 1
+                self.class_count[class_result] += 1
 
         #avoid mistake for next time classifier
         L3_ctrl = 0
@@ -796,15 +731,13 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         #mapping dict_to_port dst src
 
-        if dpid in self.dstipv4_to_port and ipv4_dst in self.dstipv4_to_port[
-                dpid]:
+        if dpid in self.dstipv4_to_port and ipv4_dst in self.dstipv4_to_port[dpid]:
             #out_port
             out_port = self.dstipv4_to_port[dpid][ipv4_dst]
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("dst ip    s{0:<2}(out={1:>2})".format(
-                    dpid, out_port))
+                self.logger.info("dst ip    s{0:<2}(out={1:>2})".format(dpid, out_port))
             #match
             if self.FlowMatch_ctrl == 1:
                 if tcp_dst:
@@ -831,14 +764,12 @@ class SimpleSwitch13(app_manager.RyuApp):
                           actions=actions,
                           hard_timeout=self.hard_timeout[class_result])
             self._send_package(msg, datapath, in_port, actions)
-        elif dpid in self.dstmac_to_port and eth_dst in self.dstmac_to_port[
-                dpid]:
+        elif dpid in self.dstmac_to_port and eth_dst in self.dstmac_to_port[dpid]:
             out_port = self.dstmac_to_port[dpid][eth_dst]
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("dst mac   s{0:<2}(out={1:>2})".format(
-                    dpid, out_port))
+                self.logger.info("dst mac   s{0:<2}(out={1:>2})".format(dpid, out_port))
             match = datapath.ofproto_parser.OFPMatch(eth_dst=eth_dst)
             actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port)]
             self.add_flow(datapath=datapath,
@@ -847,15 +778,13 @@ class SimpleSwitch13(app_manager.RyuApp):
                           actions=actions,
                           hard_timeout=self.hard_timeout[class_result])
             self._send_package(msg, datapath, in_port, actions)
-        elif dpid in self.srcipv4_to_port and ipv4_src in self.srcipv4_to_port[
-                dpid]:
+        elif dpid in self.srcipv4_to_port and ipv4_src in self.srcipv4_to_port[dpid]:
             #out_port
             out_port = self.srcipv4_to_port[dpid][ipv4_src]
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("src ip    s{0:<2}(out={1:>2})".format(
-                    dpid, out_port))
+                self.logger.info("src ip    s{0:<2}(out={1:>2})".format(dpid, out_port))
             #match
             if self.FlowMatch_ctrl == 1:
                 if tcp_src:
@@ -882,14 +811,12 @@ class SimpleSwitch13(app_manager.RyuApp):
                           actions=actions,
                           hard_timeout=self.hard_timeout[class_result])
             self._send_package(msg, datapath, in_port, actions)
-        elif dpid in self.srcmac_to_port and eth_src in self.srcmac_to_port[
-                dpid]:
+        elif dpid in self.srcmac_to_port and eth_src in self.srcmac_to_port[dpid]:
             out_port = self.srcmac_to_port[dpid][eth_src]
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("src mac   s{0:<2}(out={1:>2})".format(
-                    dpid, out_port))
+                self.logger.info("src mac   s{0:<2}(out={1:>2})".format(dpid, out_port))
             match = datapath.ofproto_parser.OFPMatch(eth_src=eth_src)
             actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port)]
             self.add_flow(datapath=datapath,
@@ -898,14 +825,12 @@ class SimpleSwitch13(app_manager.RyuApp):
                           actions=actions,
                           hard_timeout=self.hard_timeout[class_result])
             self._send_package(msg, datapath, in_port, actions)
-        elif dpid in self.inport_to_port and in_port in self.inport_to_port[
-                dpid]:
+        elif dpid in self.inport_to_port and in_port in self.inport_to_port[dpid]:
             out_port = self.inport_to_port[dpid][in_port]
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("src port  s{0:<2}(out={1:>2})".format(
-                    dpid, out_port))
+                self.logger.info("src port  s{0:<2}(out={1:>2})".format(dpid, out_port))
             match = datapath.ofproto_parser.OFPMatch(in_port=in_port)
             actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port)]
             self.add_flow(datapath=datapath,
@@ -917,8 +842,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
     #monitor
 
-    @set_ev_cls(ofp_event.EventOFPStateChange,
-                [MAIN_DISPATCHER, DEAD_DISPATCHER])
+    @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
         datapath = ev.datapath
         if ev.state == MAIN_DISPATCHER:
@@ -955,9 +879,7 @@ class SimpleSwitch13(app_manager.RyuApp):
 
                     #for latency
                     self.ping_monitor_timestamp[dpid] = time.time()
-                    if dpid >= self.slice_to_dpid[
-                            0] and dpid <= self.slice_to_dpid[self.SliceNum -
-                                                              1]:
+                    if dpid >= self.slice_to_dpid[0] and dpid <= self.slice_to_dpid[self.SliceNum - 1]:
                         echo = icmp.echo(id_=dpid, seq=1)
                         data = self._ping_request(dst_dpid=dpid, echo=echo)
                         self._send_ping(src_dpid=1, dst_dpid=dpid, data=data)
@@ -985,8 +907,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.reqecho_timestamp[dpid] = time.time()
 
     #innerdelay end
-    @set_ev_cls(ofp_event.EventOFPEchoReply,
-                [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
+    @set_ev_cls(ofp_event.EventOFPEchoReply, [HANDSHAKE_DISPATCHER, CONFIG_DISPATCHER, MAIN_DISPATCHER])
     def _echo_reply_handler(self, ev):
         timestamp_reply = time.time()
         dpid = ev.msg.datapath.id
@@ -1036,14 +957,11 @@ class SimpleSwitch13(app_manager.RyuApp):
         datapath = self.datapaths[src_dpid]
         if src_dpid == 1:
             out_port = self.slice_to_dstport[1][self.dpid_to_slice[dst_dpid]]
-        elif src_dpid >= self.slice_to_dpid[
-                0] and src_dpid <= self.slice_to_dpid[self.SliceNum - 1]:
+        elif src_dpid >= self.slice_to_dpid[0] and src_dpid <= self.slice_to_dpid[self.SliceNum - 1]:
             out_port = 1
         buffer_id = 0xffffffff
         in_port = datapath.ofproto.OFPP_CONTROLLER
-        actions = [
-            datapath.ofproto_parser.OFPActionOutput(port=out_port, max_len=0)
-        ]
+        actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port, max_len=0)]
         msg = datapath.ofproto_parser.OFPPacketOut(datapath=datapath,
                                                    buffer_id=buffer_id,
                                                    in_port=in_port,
@@ -1069,29 +987,23 @@ class SimpleSwitch13(app_manager.RyuApp):
             for stat in sorted(body, key=attrgetter('port_no')):
                 if stat.port_no <= 2 * self.SliceNum:
                     currtx = stat.tx_bytes
-                    prevtx = self.port_ctrl['prev_tx_bytes'][dpid][
-                        stat.port_no]
+                    prevtx = self.moniter_record['prev_tx_bytes'][dpid][stat.port_no]
                     tx_bytes = currtx - prevtx
 
-                    self.port_ctrl['prev_tx_bytes'][dpid][
-                        stat.port_no] = currtx
-                    self.port_ctrl['Tx_flow'][dpid][stat.port_no] = tx_bytes
+                    self.moniter_record['prev_tx_bytes'][dpid][stat.port_no] = currtx
+                    self.moniter_record['Tx_flow'][dpid][stat.port_no] = tx_bytes
 
                     currrx = stat.rx_bytes
-                    prevrx = self.port_ctrl['prev_rx_bytes'][dpid][
-                        stat.port_no]
+                    prevrx = self.moniter_record['prev_rx_bytes'][dpid][stat.port_no]
                     rx_bytes = currrx - prevrx
 
-                    self.port_ctrl['prev_rx_bytes'][dpid][
-                        stat.port_no] = currrx
-                    self.port_ctrl['Rx_flow'][dpid][stat.port_no] = rx_bytes
+                    self.moniter_record['prev_rx_bytes'][dpid][stat.port_no] = currrx
+                    self.moniter_record['Rx_flow'][dpid][stat.port_no] = rx_bytes
 
                     if self.UpdateBudget_ctrl == 1:
                         self.bandfree[dpid] = {
-                            i: self.bandwidth[i] - self.port_ctrl['Tx_flow']
-                            [dpid][self.slice_to_dstport[dpid][i]] -
-                            self.port_ctrl['Rx_flow'][dpid][
-                                self.slice_to_dstport[dpid][i]]
+                            i: self.bandwidth[i] - self.moniter_record['Tx_flow'][dpid][self.slice_to_dstport[dpid][i]] -
+                            self.moniter_record['Rx_flow'][dpid][self.slice_to_dstport[dpid][i]]
                             for i in range(self.SliceNum)
                         }
 
@@ -1110,15 +1022,10 @@ class SimpleSwitch13(app_manager.RyuApp):
                     self.duration_sec = stat.duration_sec
                     if dpid == 1 or dpid == 2:
                         if stat.port_no <= 2 * self.SliceNum:
-                            latency = self.latency[dpid][
-                                self.port_to_slice[dpid][stat.port_no]]
-                            bandfree = self.bandfree[dpid][
-                                self.port_to_slice[dpid][stat.port_no]]
-                            bandwidth = self.bandwidth[self.port_to_slice[dpid]
-                                                       [stat.port_no]]
-                            bandload = self.port_ctrl['Rx_flow'][dpid][
-                                stat.port_no] + self.port_ctrl['Tx_flow'][
-                                    dpid][stat.port_no]
+                            latency = self.latency[dpid][self.port_to_slice[dpid][stat.port_no]]
+                            bandfree = self.bandfree[dpid][self.port_to_slice[dpid][stat.port_no]]
+                            bandwidth = self.bandwidth[self.port_to_slice[dpid][stat.port_no]]
+                            bandload = self.moniter_record['Rx_flow'][dpid][stat.port_no] + self.moniter_record['Tx_flow'][dpid][stat.port_no]
                         else:
                             latency = 123.567
                             bandfree = 1
@@ -1136,9 +1043,9 @@ class SimpleSwitch13(app_manager.RyuApp):
                         '%016x %8x %8d %8d %8d %8d %8d %8d %8.3f %8d %8d %s',
                         ev.msg.datapath.id, stat.port_no, stat.rx_packets,
                         stat.rx_bytes,
-                        self.port_ctrl['Rx_flow'][dpid][stat.port_no],
+                        self.moniter_record['Rx_flow'][dpid][stat.port_no],
                         stat.tx_packets, stat.tx_bytes,
-                        self.port_ctrl['Tx_flow'][dpid][stat.port_no], latency,
+                        self.moniter_record['Tx_flow'][dpid][stat.port_no], latency,
                         bandfree, bandload, bar)
 
         #monitor record csv file
@@ -1148,7 +1055,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                 row = [csvtime]
                 for csvid in range(1, 2 + 1):
                     for csvno in range(1, 14 + 1):
-                        row.append(self.port_ctrl['Rx_flow'][csvid][csvno])
-                        row.append(self.port_ctrl['Tx_flow'][csvid][csvno])
+                        row.append(self.moniter_record['Rx_flow'][csvid][csvno])
+                        row.append(self.moniter_record['Tx_flow'][csvid][csvno])
                 writer = csv.writer(csv_file)
                 writer.writerow(row)
