@@ -2,7 +2,6 @@
 #http://mininet.org/api/annotated.html
 
 
-from exp_config.exp_config import MININET_BW
 from mininet.net import Mininet
 from mininet.node import RemoteController
 from mininet.link import TCLink
@@ -13,6 +12,7 @@ from mininet.util import dumpNodeConnections
 
 import sys
 sys.path.insert(1, './')
+from exp_config.exp_config import MININET_BW
 
 SliceNum = 7
 HostTotal = SliceNum*2
