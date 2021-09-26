@@ -191,7 +191,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.sleep_period = SLEEP_PERIOD
         if self.Monitor_ctrl == 1:
             self.monitor_thread = hub.spawn(self._monitor)
-        self.moniter_record = {            
+        self.moniter_record = {
             'prev_tx_bytes': {1: {}, 2: {}},
             'prev_rx_bytes': {1: {}, 2: {}},
             'prev_tx_packets': {1: {}, 2: {}},
@@ -213,10 +213,8 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.bandfree = {1: {}, 2: {}}
         self.bandfree[1] = {i: BUDGET_BW[i] for i in range(self.SliceNum)}
         self.bandfree[2] = {i: BUDGET_BW[i] for i in range(self.SliceNum)}
-        print(self.bandfree)
         self.bandpktsize = orig_BUDGET_PKT_SIZE
         self.bandpktsize[-1] = 60
-        print(self.bandpktsize)
 
         #latency
         self.innerdelay = {i: 0 for i in range(self.SwitchTotal + 1)}
@@ -621,8 +619,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             )
             self.logger.info(
                 '{0:>5} {1:>6} {2:>7} {3:>17} {4:>17} {5:<8}:{6:>5} {7:<8}:{8:>5}'
-                .format(self.packet_count, dpid, in_port, eth_src, eth_dst,
-                        ip_src, src_port, ip_dst, dst_port))
+                .format(self.packet_count, dpid, in_port, eth_src, eth_dst, ip_src, src_port, ip_dst, dst_port))
             self.logger.info("---------------------------------------------------------------------------------------")
 
         #monitor ping
@@ -737,7 +734,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("dst ip    s{0:<2}(out={1:>2})".format(dpid, out_port))
+                self.logger.info(f"dst ip    s{dpid:<2}(out={out_port:>2})")
             #match
             if self.FlowMatch_ctrl == 1:
                 if tcp_dst:
@@ -769,7 +766,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("dst mac   s{0:<2}(out={1:>2})".format(dpid, out_port))
+                self.logger.info(f"dst mac    s{dpid:<2}(out={out_port:>2})")
             match = datapath.ofproto_parser.OFPMatch(eth_dst=eth_dst)
             actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port)]
             self.add_flow(datapath=datapath,
@@ -784,7 +781,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("src ip    s{0:<2}(out={1:>2})".format(dpid, out_port))
+                self.logger.info(f"src ip    s{dpid:<2}(out={out_port:>2})")
             #match
             if self.FlowMatch_ctrl == 1:
                 if tcp_src:
@@ -816,7 +813,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("src mac   s{0:<2}(out={1:>2})".format(dpid, out_port))
+                self.logger.info(f"src mac    s{dpid:<2}(out={out_port:>2})")
             match = datapath.ofproto_parser.OFPMatch(eth_src=eth_src)
             actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port)]
             self.add_flow(datapath=datapath,
@@ -830,7 +827,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             if dpid == 1 or dpid == 2:
                 out_port = self._out_port_group(dpid, out_port, class_result)
             if self.ActionPrint_ctrl == 1:
-                self.logger.info("src port  s{0:<2}(out={1:>2})".format(dpid, out_port))
+                self.logger.info(f"src port    s{dpid:<2}(out={out_port:>2})")
             match = datapath.ofproto_parser.OFPMatch(in_port=in_port)
             actions = [datapath.ofproto_parser.OFPActionOutput(port=out_port)]
             self.add_flow(datapath=datapath,
@@ -860,10 +857,10 @@ class SimpleSwitch13(app_manager.RyuApp):
     D1         D2
     |          |
     S1-latency-S3
-    
+
     #echo = controller -> Sa;Sb -> controller
     #innerdelay D1;D2 = echo /2
-    #ping = Controller -> Sa -> Sb -> Controller 
+    #ping = Controller -> Sa -> Sb -> Controller
     #latency = ping - D1 - D2
     """
 
@@ -911,8 +908,7 @@ class SimpleSwitch13(app_manager.RyuApp):
     def _echo_reply_handler(self, ev):
         timestamp_reply = time.time()
         dpid = ev.msg.datapath.id
-        self.innerdelay[dpid] = (timestamp_reply -
-                                 self.reqecho_timestamp[dpid]) / 2
+        self.innerdelay[dpid] = (timestamp_reply - self.reqecho_timestamp[dpid]) / 2
 
     #ping
     def _build_ping(self, dpid, _type, echo):
