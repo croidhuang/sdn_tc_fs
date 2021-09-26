@@ -8,6 +8,7 @@ https://www.unb.ca/cic/datasets/vpn.html
 預處理(輸入pcap, 輸出parquet)  
 classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
+記憶體不足中斷後,處理過的不會重複處理  
 
 
 訓練model(輸入parquet, 輸出model)  
@@ -58,10 +59,9 @@ python3 pktgen/cs/server10.py
 等待到設定的開始時間  
   
 執行中  
-依照設定的時間間隔儲存檔案  
+依照設定的時間每個間隔儲存檔案  
 
 執行完成  
-輸出client和server的收發時間紀錄到檔案  
-  
+最後輸出client和server的收發時間儲存檔案    
 注意，時間過長可能會耗盡記憶體，需要修改儲存方式  
 
