@@ -96,9 +96,9 @@ def myNetwork():
 
     for i in range(1, hostq+1):
         if i <=hostq/2:
-            HostList[i].cmdPrint("python3 pg/gen/client"+str(i)+".py")
+            HostList[i].cmdPrint("python3 pktgen/gen/client"+str(i)+".py")
         elif i>hostq/2:
-            HostList[i].cmdPrint("python3 pg/gen/server"+str(i)+".py")
+            HostList[i].cmdPrint("python3 pktgen/gen/server"+str(i)+".py")
         else:
             break
     """
