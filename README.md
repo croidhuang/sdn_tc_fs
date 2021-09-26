@@ -8,13 +8,15 @@ https://www.unb.ca/cic/datasets/vpn.html
 預處理(輸入pcap, 輸出parquet)  
 classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
-記憶體不足中斷後,處理過的不會重複處理  
+記憶體不足中斷後,處理完成的不會重複處理  
 
 
 訓練model(輸入parquet, 輸出model)  
 classifier/train_test_sklearn.py  
 修改輸入輸出路徑  
 修改訓練類型  
+可以在最底下寫每次要的參數選項自動執行
+注意，輸入要大概10~15分鐘  
 
 將model儲存到資料夾  
 ryu/ryu/app/ryu_customapp/models/
