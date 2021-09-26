@@ -10,8 +10,7 @@ bandpktsize_one_statistic = ONE_PKT_SIZE
 
 bandpktsize_statistic = {}
 for i in bandpktsize_one_statistic:
-    bandpktsize_statistic[
-        i] = bandpktsize_one_statistic[i] / latency_statistic[i]
+    bandpktsize_statistic[i] = bandpktsize_one_statistic[i] / latency_statistic[i]
 
 latency_s_normalize = {}
 bandpktsize_s_normalize = {}
@@ -41,14 +40,11 @@ def normalize_statistic(inputdict, normalizetype, best, worst):
     outputdict = {}
     for k, v in inputdict.items():
         if normalizetype == "latency":
-            outputdict[k] = (v - min_value) / scale_value * (worst -
-                                                             best) + best
+            outputdict[k] = (v - min_value) / scale_value * (worst - best) + best
         elif normalizetype == "timeout":
-            outputdict[k] = int((v - min_value) / scale_value *
-                                (worst - best) + best)
+            outputdict[k] = int((v - min_value) / scale_value * (worst - best) + best)
         else:
-            outputdict[k] = (max_value - v) / scale_value * (worst -
-                                                             best) + best
+            outputdict[k] = (max_value - v) / scale_value * (worst - best) + best
     return outputdict
 
 
@@ -75,34 +71,27 @@ def normalize_dynamic(inputdict, statistic, normalizetype, best, worst):
             if v <= min_value:
                 outputdict[k] = best
             else:
-                outputdict[k] = (v - min_value) / scale_value * (worst -
-                                                                 best) + best
+                outputdict[k] = (v - min_value) / scale_value * (worst - best) + best
         else:
             if v >= max_value:
                 outputdict[k] = best
             else:
-                outputdict[k] = (max_value - v) / scale_value * (worst -
-                                                                 best) + best
+                outputdict[k] = (max_value - v) / scale_value * (worst - best) + best
 
     return outputdict
 
 
 def scheduler_hard_timeout(best, worst):
-    latency_s_normalize = normalize_statistic(latency_statistic, "latency", 0,
-                                              1)
-    bandpktsize_s_normalize = normalize_statistic(bandpktsize_statistic,
-                                                  "bandfree", 0, 1)
+    latency_s_normalize = normalize_statistic(latency_statistic, "latency", 0, 1)
+    bandpktsize_s_normalize = normalize_statistic(bandpktsize_statistic, "bandfree", 0, 1)
 
-    require = weighted_require(latency_s_normalize, bandpktsize_s_normalize,
-                               flow_d_normalize)
-    timeout_s_normalize = normalize_statistic(dict(require), "timeout", best,
-                                              worst)
+    require = weighted_require(latency_s_normalize, bandpktsize_s_normalize, flow_d_normalize)
+    timeout_s_normalize = normalize_statistic(dict(require), "timeout", best, worst)
     return timeout_s_normalize
 
 
 #algo
-def weighted_require(latency_s_normalize, bandpktsize_s_normalize,
-                     flow_s_normalize):
+def weighted_require(latency_s_normalize, bandpktsize_s_normalize, flow_s_normalize):
     r = {}
 
     for i in range(7):
@@ -116,8 +105,7 @@ def weighted_require(latency_s_normalize, bandpktsize_s_normalize,
     return r
 
 
-def weighted_quality(latency_s_normalize, bandpktsize_s_normalize,
-                     latency_d_normalize, bandfree_d_normalize):
+def weighted_quality(latency_s_normalize, bandpktsize_s_normalize, latency_d_normalize, bandfree_d_normalize):
     q = {}
 
     for i in range(7):
@@ -148,23 +136,15 @@ def scheduler_algo(class_result, latency, bandfree, flow):
     if class_result == -1:
         return class_result
     try:
-        latency_s_normalize = normalize_statistic(latency_statistic, "latency",
-                                                  0, 1)
-        bandpktsize_s_normalize = normalize_statistic(bandpktsize_statistic,
-                                                      "bandfree", 0, 1)
+        latency_s_normalize = normalize_statistic(latency_statistic, "latency", 0, 1)
+        bandpktsize_s_normalize = normalize_statistic(bandpktsize_statistic, "bandfree", 0, 1)
 
-        latency_d_normalize = normalize_dynamic(latency, latency_statistic,
-                                                "latency", 0, 1)
-        bandfree_d_normalize = normalize_dynamic(bandfree,
-                                                 bandpktsize_statistic,
-                                                 "bandfree", 0, 1)
+        latency_d_normalize = normalize_dynamic(latency, latency_statistic, "latency", 0, 1)
+        bandfree_d_normalize = normalize_dynamic(bandfree, bandpktsize_statistic, "bandfree", 0, 1)
         flow_d_normalize = normalize_statistic(flow, "flow", 0, 1)
 
-        require = weighted_require(latency_s_normalize,
-                                   bandpktsize_s_normalize, flow_d_normalize)
-        quality = weighted_quality(latency_s_normalize,
-                                   bandpktsize_s_normalize,
-                                   latency_d_normalize, bandfree_d_normalize)
+        require = weighted_require(latency_s_normalize,bandpktsize_s_normalize, flow_d_normalize)
+        quality = weighted_quality(latency_s_normalize,bandpktsize_s_normalize,latency_d_normalize, bandfree_d_normalize)
 
         #sort,(key, value)
         for i, r in enumerate(require):
@@ -205,9 +185,7 @@ def random_algo(class_result, latency, bandfree, flow):
 
 def MAX_algo(class_result, latency, bandfree, flow):
     outputdict = {i: bandfree[i] for i in range(7)}
-    sortgroup = sorted(outputdict.items(),
-                       key=lambda item: item[1],
-                       reverse=True)
+    sortgroup = sorted(outputdict.items(),key=lambda item: item[1],reverse=True)
 
     for i, key in enumerate(sortgroup):
         av_slice_num = sortgroup[i][0]
