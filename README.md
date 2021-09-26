@@ -57,5 +57,11 @@ python3 pktgen/gen/server10.py
 等待讀取pcap直到出現ready  
 等待到設定的開始時間  
   
+執行中  
+依照設定的時間間隔儲存檔案  
+
 執行完成  
-monitor檔案儲存在home目錄  
+輸出client和server的收發時間紀錄到檔案  
+  
+注意，時間過長可能會耗盡記憶體，需要修改儲存方式  
+
