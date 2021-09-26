@@ -8,7 +8,7 @@ https://www.unb.ca/cic/datasets/vpn.html
 預處理(輸入pcap, 輸出parquet)  
 classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
-記憶體不足中斷後,處理完成的不會重複處理  
+大約需要8小時，記憶體不足中斷後,處理完成的不會重複處理  
 
 
 訓練model(輸入parquet, 輸出model)  
