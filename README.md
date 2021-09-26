@@ -6,12 +6,12 @@ https://www.unb.ca/cic/datasets/vpn.html
 安裝python及所需的套件  
 
 預處理(輸入pcap, 輸出parquet)  
-classifier/preprocessingpcap.py  
+classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
 
 
 訓練model(輸入parquet, 輸出model)  
-classifier/sklearn.py  
+classifier/train_test_sklearn.py  
 修改輸入輸出路徑  
 修改訓練類型  
 
