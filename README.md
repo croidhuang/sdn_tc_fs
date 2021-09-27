@@ -39,8 +39,11 @@ ryu/ryu/app/ryu_customapp/models/
 ## 流量排程
 
 #### 安裝python3
-
-
+<code>
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install python3-pip
+</code>
 
 #### 安裝所需的模組  
 scapy
