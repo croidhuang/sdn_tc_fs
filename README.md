@@ -20,6 +20,8 @@ matplotlib
 seaborn  
 pydotplus  
 joblib  
+imblearn  
+lightgbm  
 
 #### 預處理(輸入pcap, 輸出parquet)  
 修改classifier/preprocessing_pcap.py  
