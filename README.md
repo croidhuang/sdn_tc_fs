@@ -22,15 +22,15 @@ pydotplus
 joblib  
 
 #### 預處理(輸入pcap, 輸出parquet)  
-classifier/preprocessing_pcap.py  
+修改classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
 大約需要8小時，放心如果記憶體不足中斷,處理完成的不會重複處理  
 
 #### 訓練model(輸入parquet, 輸出model)  
-classifier/train_test_sklearn.py  
+修改classifier/train_test_sklearn.py  
 修改輸入輸出路徑  
 修改訓練類型  
-輸入大約需要15分鐘，可以在最底下寫每次要的參數選項自動執行多次  
+大約需要15分鐘，可以在最底下寫每次要的參數選項自動執行多次  
 
 #### 將model儲存到流量排程的資料夾(安裝控制器ryu的位置)
 ryu/ryu/app/ryu_customapp/models/
@@ -55,7 +55,7 @@ http://mininet.org/download/
 https://ryu.readthedocs.io/en/latest/getting_started.html
 
 #### 設定重播pcap參數  
-exp_config/exp_config.py  
+修改exp_config/exp_config.py  
 修改設定  
 修改產生封包的開始時間：timestring  
 修改pcap路徑：PKT_FILE_LIST  
