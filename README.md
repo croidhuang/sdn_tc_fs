@@ -13,13 +13,13 @@ PATH記得打勾
 PATH記得打勾  
 
 #### 安裝python所需的模組  
-sklearn
-numpy
-pandas
-matplotlib
-seaborn
-pydotplus
-joblib
+sklearn  
+numpy  
+pandas  
+matplotlib  
+seaborn  
+pydotplus  
+joblib  
 
 #### 預處理(輸入pcap, 輸出parquet)  
 classifier/preprocessing_pcap.py  
