@@ -61,39 +61,39 @@ exp_config/exp_config.py
 #### 執行mininet  
 <code>
 sudo python3 mininet/custom/custom_example_7to7.py  
-</code>
+</code>  
 
 #### 執行ryu  
 <code>
 ryu-manager ryu/ryu/app/simple_switch_13_slice.py  
-</code>
+</code>  
   
 #### 在mininet輸入  
 <code>
 mininet> xterm h1 h2 h3 h4 h5 h6 h7 h8 h9 h10 h11 h12 h13 h14  
-</code>
+</code>  
   
 #### 在xterm執行 
 ##### client
 在h1執行  
-<code>python3 pktgen/cs/client1.py</code>
+<code>python3 pktgen/cs/client1.py</code>  
 在h2執行  
-<code>python3 pktgen/cs/client2.py</code>
+<code>python3 pktgen/cs/client2.py</code>  
 在h3執行  
-<code>python3 pktgen/cs/client3.py</code>
+<code>python3 pktgen/cs/client3.py</code>  
 ...  
 在h7執行  
-<code>python3 pktgen/cs/client7.py</code>
+<code>python3 pktgen/cs/client7.py</code>  
 ##### server
 在h8執行  
-<code>python3 pktgen/cs/server8.py</code>
+<code>python3 pktgen/cs/server8.py</code>  
 在h9執行  
-<code>python3 pktgen/cs/server9.py</code>
+<code>python3 pktgen/cs/server9.py</code>  
 在h10執行  
-<code>python3 pktgen/cs/server10.py</code>
+<code>python3 pktgen/cs/server10.py</code>  
 ...  
 在h14執行  
-<code>python3 pktgen/cs/server14.py</code>
+<code>python3 pktgen/cs/server14.py</code>  
   
 #### 等待
 等待讀取pcap直到出現ready  
