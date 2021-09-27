@@ -7,8 +7,10 @@ https://www.unb.ca/cic/datasets/vpn.html
   
 #### 安裝python3 
 
-https://www.python.org/downloads/
-PATH記得打勾
+https://www.python.org/downloads/  
+PATH記得打勾  
+PATH記得打勾  
+PATH記得打勾  
 
 #### 安裝python所需的模組  
 sklearn
