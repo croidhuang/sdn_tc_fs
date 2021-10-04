@@ -167,7 +167,7 @@ def scheduler_algo(class_result, latency, bandfree, flow):
 def random_algo(class_result, latency, bandfree, flow):
     outputlist = [(i, bandfree[i]) for i in range(7)]
     avgroup = []
-
+    
     for i, key in enumerate(outputlist):
         av_slice_num = outputlist[i][0]
         av = outputlist[i][1]
@@ -176,7 +176,7 @@ def random_algo(class_result, latency, bandfree, flow):
 
     if avgroup:
         slice_num = choice(avgroup)
-        print('relax')
+        print(f'choice {slice_num}')
     else:
         slice_num = class_result
 
@@ -203,7 +203,7 @@ def MAX_algo(class_result, latency, bandfree, flow):
 
     if avgroup:
         slice_num = choice(avgroup)
-        print('relax')
+        print(f'choice {slice_num}')
     else:
         slice_num = class_result
 
@@ -230,7 +230,7 @@ def min_algo(class_result, latency, bandfree, flow):
 
     if avgroup:
         slice_num = choice(avgroup)
-        print('relax')
+        print(f'choice {slice_num}')
     else:
         slice_num = class_result
 
