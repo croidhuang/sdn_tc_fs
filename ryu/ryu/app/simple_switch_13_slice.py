@@ -49,7 +49,7 @@ import csv
 import sys
 
 sys.path.insert(1, './')
-from exp_config.exp_config import SLEEP_PERIOD, orig_BUDGET_PKT_SIZE, BUDGET_BW, GOGO_TIME, SCHEDULER_TYPE, PKT_FILE_MAP
+from exp_config.exp_config import SLEEP_PERIOD, orig_BUDGET_PKT_SIZE, BUDGET_BW, GOGO_TIME, TOTAL_TIME, SCHEDULER_TYPE, PKT_FILE_MAP
 
 
 class SimpleSwitch13(app_manager.RyuApp):
@@ -106,8 +106,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.class_count = {i: 0 for i in range(self.SliceNum)}
         #[-1]=unknown class
         self.class_count[-1] = 0
-        self.pcap_writer = pcaplib.Writer(open('mypcap.pcap', 'wb'),
-                                          snaplen=80)
+        self.pcap_writer = pcaplib.Writer(open('mypcap.pcap', 'wb'), snaplen=80)
 
         #for scheduler
         self.total_length = 0
@@ -446,7 +445,6 @@ class SimpleSwitch13(app_manager.RyuApp):
         datapath.send_msg(out)
 
     #different switch to lowload slice
-
     def _out_port_group(self, dpid, out_port, class_result):
         slice_num = class_result
         if self.Scheuduler_ctrl == 0:
@@ -458,6 +456,8 @@ class SimpleSwitch13(app_manager.RyuApp):
             flow = {i: self.class_count[i] for i in self.class_count if i != -1}
             latency = self.latency[dpid]
             bandfree = self.bandfree[dpid]
+
+            print(f'bandfree s{dpid}: {bandfree}')
 
             if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] > self.bandpktsize[class_result]:
                 slice_num = class_result
@@ -474,9 +474,11 @@ class SimpleSwitch13(app_manager.RyuApp):
 
             out_port = self.slice_to_dstport[dpid][slice_num]
 
+        #1src
         elif dpid == 1 and out_port >= self.slice_to_srcport[dpid][0] and out_port <= self.slice_to_srcport[dpid][self.SliceNum - 1]:
             return out_port
 
+        #2dst
         elif dpid == 2 and out_port >= self.slice_to_dstport[dpid][0] and out_port <= self.slice_to_dstport[dpid][self.SliceNum - 1]:
             return out_port
 
@@ -484,6 +486,8 @@ class SimpleSwitch13(app_manager.RyuApp):
             flow = {i: self.class_count[i] for i in self.class_count if i != -1}
             latency = self.latency[dpid]
             bandfree = self.bandfree[dpid]
+
+            print(f'bandfree s{dpid}: {bandfree}')
 
             if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] > self.bandpktsize[class_result]:
                 slice_num = class_result
@@ -500,7 +504,10 @@ class SimpleSwitch13(app_manager.RyuApp):
 
             out_port = self.slice_to_srcport[dpid][slice_num]
 
+        #concume avaliable slice
         self.bandfree[dpid][slice_num] -= self.bandpktsize[class_result]
+        print(f'concume {self.bandpktsize[class_result]}')
+        print(f'bandfree s{dpid}: {self.bandfree[dpid]}')
 
         if self.ScheudulerPrint_ctrl == 1:
             print(f'controller s{dpid} outport={out_port}')
@@ -838,7 +845,6 @@ class SimpleSwitch13(app_manager.RyuApp):
             self._send_package(msg, datapath, in_port, actions)
 
     #monitor
-
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
         datapath = ev.datapath
@@ -1037,20 +1043,18 @@ class SimpleSwitch13(app_manager.RyuApp):
 
                     self.logger.info(
                         '%016x %8x %8d %8d %8d %8d %8d %8d %8.3f %8d %8d %s',
-                        ev.msg.datapath.id, stat.port_no, stat.rx_packets,
-                        stat.rx_bytes,
-                        self.moniter_record['Rx_flow'][dpid][stat.port_no],
-                        stat.tx_packets, stat.tx_bytes,
-                        self.moniter_record['Tx_flow'][dpid][stat.port_no], latency,
-                        bandfree, bandload, bar)
+                        ev.msg.datapath.id, stat.port_no, 
+                        stat.rx_packets, stat.rx_bytes, self.moniter_record['Rx_flow'][dpid][stat.port_no],
+                        stat.tx_packets, stat.tx_bytes, self.moniter_record['Tx_flow'][dpid][stat.port_no], 
+                        latency, bandfree, bandload, bar)
 
         #monitor record csv file
         csvtime = time.time()
-        if dpid == 2 and csvtime >= GOGO_TIME and csvtime <= GOGO_TIME + 240:
+        if dpid == 2 and csvtime >= GOGO_TIME and csvtime <= GOGO_TIME + TOTAL_TIME:
             with open(self.csv_throughput_record_file, 'a') as csv_file:
                 row = [csvtime]
                 for csvid in range(1, 2 + 1):
-                    for csvno in range(1, 14 + 1):
+                    for csvno in range(1, self.SliceNum*2 + 1):
                         row.append(self.moniter_record['Rx_flow'][csvid][csvno])
                         row.append(self.moniter_record['Tx_flow'][csvid][csvno])
                 writer = csv.writer(csv_file)
