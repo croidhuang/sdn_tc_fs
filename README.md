@@ -51,7 +51,9 @@ ryu/ryu/app/ryu_customapp/models/
 scapy
 
 #### 安裝mininet
-http://mininet.org/download/
+http://mininet.org/download/  
+<code>git clone git://github.com/mininet/mininet</code>
+<code>sudo PYTHON=python3 mininet/util/install.sh -n   # install Python 3 Mininet</code>
 
 #### 安裝ryu  
 https://ryu.readthedocs.io/en/latest/getting_started.html
