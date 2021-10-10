@@ -57,8 +57,9 @@ http://mininet.org/download/
 
 #### 安裝ryu  
 https://ryu.readthedocs.io/en/latest/getting_started.html  
-<code>pip3 install ryu</code>  
 <code>git clone git://github.com/faucetsdn/ryu.git</code>  
+<code>pip3 install ryu</code>  
+<code>sudo apt install python3-ryu</code>  
  
 #### 設定重播pcap參數  
 修改exp_config/exp_config.py  
