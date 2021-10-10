@@ -52,12 +52,13 @@ scapy
 
 #### 安裝mininet
 http://mininet.org/download/  
-<code>git clone git://github.com/mininet/mininet</code>
-<code>sudo PYTHON=python3 mininet/util/install.sh -n   # install Python 3 Mininet</code>
+<code>git clone git://github.com/mininet/mininet</code>  
+<code>sudo PYTHON=python3 mininet/util/install.sh -n   # install Python 3 Mininet</code>  
 
 #### 安裝ryu  
-https://ryu.readthedocs.io/en/latest/getting_started.html
-
+https://ryu.readthedocs.io/en/latest/getting_started.html  
+<code>pip3 install ryu</code>  
+ 
 #### 設定重播pcap參數  
 修改exp_config/exp_config.py  
 修改設定  
