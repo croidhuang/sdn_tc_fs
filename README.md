@@ -24,12 +24,12 @@ imblearn
 lightgbm  
 
 #### 預處理(輸入pcap, 輸出parquet)  
-修改classifier/preprocessing_pcap.py  
+開啟classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
 大約需要8小時，放心如果記憶體不足中斷,處理完成的不會重複處理  
 
 #### 訓練model(輸入parquet, 輸出model)  
-修改classifier/train_test_sklearn.py  
+開啟classifier/train_test_sklearn.py  
 修改輸入輸出路徑  
 修改訓練類型  
 大約需要15分鐘，可以在最底下寫每次要的參數選項自動執行多次  
@@ -70,10 +70,11 @@ https://ryu.readthedocs.io/en/latest/getting_started.html
 <code>sudo apt install python3-ryu</code>  
  
 #### 設定重播pcap參數  
-修改exp_config/exp_config.py  
+開啟exp_config/exp_config.py  
 修改設定  
 修改產生封包的開始時間：timestring  
 修改pcap路徑：PKT_FILE_LIST  
+選擇性設定
 修改pcap對應的傳送間隔：PKT_FILE_MAP  
 修改select函數：SCHEDULER_TYPE  
 修改其他設定如執行時間及頻寬相關參數  
