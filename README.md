@@ -14,12 +14,12 @@ PATH記得打勾
 
 #### 安裝python所需的模組  
 sklearn  
+joblib   
 numpy  
 pandas  
 matplotlib  
 seaborn  
 pydotplus  
-joblib  
 imblearn  
 lightgbm  
 
@@ -46,7 +46,6 @@ ryu/ryu/app/ryu_customapp/models/
 <code>sudo apt-get upgrade</code>  
 <code>sudo apt-get install python3-pip</code>  
 
-
 #### 安裝所需的模組  
 scapy
 
@@ -54,6 +53,17 @@ scapy
 http://mininet.org/download/  
 <code>git clone git://github.com/mininet/mininet</code>  
 <code>sudo PYTHON=python3 mininet/util/install.sh -n</code>  
+
+#### 安裝python所需的模組 (與分類器相同) 
+sklearn  
+joblib  
+numpy  
+pandas  
+matplotlib  
+seaborn  
+pydotplus  
+imblearn  
+lightgbm  
 
 #### 安裝ryu  
 https://ryu.readthedocs.io/en/latest/getting_started.html  
