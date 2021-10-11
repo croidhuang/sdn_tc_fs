@@ -63,7 +63,7 @@ ryu/ryu/app/ryu_customapp/models/
 <code>python2 get-pip.py</code>  
 確認尚未設定過  
 <code>sudo update-alternatives --list pip</code>  
-取得路徑
+取得路徑  
 <code>pip --version</code>  
 <code>pip3 --vesrion</code>  
 設定優先  
