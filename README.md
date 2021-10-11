@@ -43,7 +43,6 @@ ryu/ryu/app/ryu_customapp/models/
 #### 安裝python3
 
 <code>sudo apt-get update</code>  
-<code>sudo apt-get upgrade</code>  
 <code>sudo apt-get install python3-pip</code>  
 
 #### 安裝所需的模組  
