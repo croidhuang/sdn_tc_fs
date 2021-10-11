@@ -44,7 +44,8 @@ ryu/ryu/app/ryu_customapp/models/
 <code>sudo apt-get update</code>  
 <code>sudo apt-get install python3-pip</code>  
   
-#### 安裝python2 (非必要步驟,讓2和3共存)
+#### (非必要步驟,讓2和3共存)
+安裝python2
 <code>sudo apt install python2</code>  
   
 確認尚未設定過  
@@ -56,6 +57,18 @@ ryu/ryu/app/ryu_customapp/models/
 確認完成設定  
 <code>sudo update-alternatives --config python</code>  
 <code>python --version</code>  
+
+安裝pip2
+<code>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py</code>  
+<code>python2 get-pip.py</code>  
+<code>pip --version</code>  
+<code>pip3 --vesrion</code>  
+
+<code>sudo update-alternatives --install /usr/bin/pip pip pip路徑 1</code>  
+<code>sudo update-alternatives --install /usr/bin/pip pip pip3路徑 2</code>  
+確認完成設定  
+<code>sudo update-alternatives --config pip</code>  
+<code>pip --version</code>  
   
 #### 安裝所需的模組  
 scapy
