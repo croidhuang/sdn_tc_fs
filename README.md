@@ -49,10 +49,9 @@ ryu/ryu/app/ryu_customapp/models/
 <code>sudo apt install python2</code>  
   
 確認尚未設定過  
-<code>ls /usr/bin/python*</code>  
 <code>sudo update-alternatives --list python</code>  
 取得路徑
-<codels /usr/bin/python</code>  
+<code>ls /usr/bin/python*</code>  
 設定優先  
 <code>sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1</code>  
 <code>sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 2</code>  
