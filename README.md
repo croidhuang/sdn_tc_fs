@@ -47,10 +47,9 @@ ryu/ryu/app/ryu_customapp/models/
 #### 讓2和3共存(非必要步驟)
 安裝python2
 <code>sudo apt install python2</code>  
-  
 確認尚未設定過  
 <code>sudo update-alternatives --list python</code>  
-取得路徑
+取得路徑  
 <code>ls /usr/bin/python*</code>  
 設定優先  
 <code>sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1</code>  
@@ -62,6 +61,8 @@ ryu/ryu/app/ryu_customapp/models/
 安裝pip2
 <code>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py</code>  
 <code>python2 get-pip.py</code>  
+確認尚未設定過  
+<code>sudo update-alternatives --list pip</code>  
 取得路徑
 <code>pip --version</code>  
 <code>pip3 --vesrion</code>  
