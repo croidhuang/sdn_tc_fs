@@ -45,7 +45,7 @@ ryu/ryu/app/ryu_customapp/models/
 <code>sudo apt-get install python3-pip</code>  
   
 #### 讓2和3共存(非必要步驟)
-安裝python2
+安裝python2  
 <code>sudo apt install python2</code>  
 確認尚未設定過  
 <code>sudo update-alternatives --list python</code>  
@@ -58,7 +58,7 @@ ryu/ryu/app/ryu_customapp/models/
 <code>sudo update-alternatives --config python</code>  
 <code>python --version</code>  
 
-安裝pip2
+安裝pip2  
 <code>wget https://bootstrap.pypa.io/pip/2.7/get-pip.py</code>  
 <code>python2 get-pip.py</code>  
 確認尚未設定過  
