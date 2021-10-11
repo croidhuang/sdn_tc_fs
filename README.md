@@ -74,9 +74,9 @@ https://ryu.readthedocs.io/en/latest/getting_started.html
 修改設定  
 修改產生封包的開始時間：timestring  
 修改pcap路徑：PKT_FILE_LIST  
-選擇性設定
-修改pcap對應的傳送間隔：PKT_FILE_MAP  
 修改select函數：SCHEDULER_TYPE  
+選擇性設定  
+修改pcap對應的傳送間隔：PKT_FILE_MAP  
 修改其他設定如執行時間及頻寬相關參數  
   
 #### 執行mininet  
