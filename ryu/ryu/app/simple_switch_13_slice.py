@@ -77,7 +77,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         #print_ctrl
         self.AllPacketInfo_ctrl = 0
         self.ClassPrint_ctrl = 0
-        self.ScheudulerPrint_ctrl = 0
+        self.ScheudulerPrint_ctrl = 1
         self.ActionPrint_ctrl = 0
         self.MonitorPrint_ctrl = 0
         self.LatencyPrint_ctrl = 0
@@ -106,7 +106,7 @@ class SimpleSwitch13(app_manager.RyuApp):
         self.class_count = {i: 0 for i in range(self.SliceNum)}
         #[-1]=unknown class
         self.class_count[-1] = 0
-        self.pcap_writer = pcaplib.Writer(open('mypcap.pcap', 'wb'), snaplen=80)
+        self.pcap_writer = pcaplib.Writer(open('ryu_temp_pcap.pcap', 'wb'), snaplen=80)
 
         #for scheduler
         self.total_length = 0
@@ -457,16 +457,17 @@ class SimpleSwitch13(app_manager.RyuApp):
             latency = self.latency[dpid]
             bandfree = self.bandfree[dpid]
 
-            print(f'bandfree s{dpid}: {bandfree}')
+            if self.ScheudulerPrint_ctrl == 1:
+                print(f'bandfree s{dpid}: {self.bandfree[dpid]}')
 
-            if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] > self.bandpktsize[class_result]:
+            if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] >= self.bandpktsize[class_result]:
                 slice_num = class_result
             elif self.Scheuduler_ctrl == "random":
-                slice_num = ryu_scheduler.random_algo(class_result, latency, bandfree, flow)
+                slice_num = ryu_scheduler.random_algo(class_result, bandfree)
             elif self.Scheuduler_ctrl == "MAX":
-                slice_num = ryu_scheduler.MAX_algo(class_result, latency, bandfree, flow)
+                slice_num = ryu_scheduler.MAX_algo(class_result, bandfree)
             elif self.Scheuduler_ctrl == "min":
-                slice_num = ryu_scheduler.min_algo(class_result, latency, bandfree, flow)
+                slice_num = ryu_scheduler.min_algo(class_result, bandfree)
             elif self.Scheuduler_ctrl == "algo":
                 slice_num = ryu_scheduler.scheduler_algo(class_result, latency, bandfree, flow)
             else:
@@ -487,16 +488,17 @@ class SimpleSwitch13(app_manager.RyuApp):
             latency = self.latency[dpid]
             bandfree = self.bandfree[dpid]
 
-            print(f'bandfree s{dpid}: {bandfree}')
+            if self.ScheudulerPrint_ctrl == 1:
+                print(f'bandfree s{dpid}: {self.bandfree[dpid]}')     
 
-            if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] > self.bandpktsize[class_result]:
+            if self.Scheuduler_ctrl == 1 or self.bandfree[dpid][class_result] >= self.bandpktsize[class_result]:
                 slice_num = class_result
             elif self.Scheuduler_ctrl == "random":
-                slice_num = ryu_scheduler.random_algo(class_result, latency, bandfree, flow)
+                slice_num = ryu_scheduler.random_algo(class_result, bandfree)
             elif self.Scheuduler_ctrl == "MAX":
-                slice_num = ryu_scheduler.MAX_algo(class_result, latency, bandfree, flow)
+                slice_num = ryu_scheduler.MAX_algo(class_result, bandfree)
             elif self.Scheuduler_ctrl == "min":
-                slice_num = ryu_scheduler.min_algo(class_result, latency, bandfree, flow)
+                slice_num = ryu_scheduler.min_algo(class_result, bandfree)
             elif self.Scheuduler_ctrl == "algo":
                 slice_num = ryu_scheduler.scheduler_algo(class_result, latency, bandfree, flow)
             else:
@@ -506,11 +508,11 @@ class SimpleSwitch13(app_manager.RyuApp):
 
         #concume avaliable slice
         self.bandfree[dpid][slice_num] -= self.bandpktsize[class_result]
-        print(f'concume {self.bandpktsize[class_result]}')
-        print(f'bandfree s{dpid}: {self.bandfree[dpid]}')
 
         if self.ScheudulerPrint_ctrl == 1:
-            print(f'controller s{dpid} outport={out_port}')
+            self.logger.info(f'controller s{dpid} outport={out_port}')
+            print(f'concume {self.bandpktsize[class_result]}')
+            print(f'bandfree s{dpid}: {self.bandfree[dpid]}')            
 
         return out_port
 
@@ -676,8 +678,8 @@ class SimpleSwitch13(app_manager.RyuApp):
 
                     if self.LatencyPrint_ctrl == 1:
                         loadbar = str('')
-                        for i in range(int(avg) * 5):
-                            loadbar = loadbar + '■'
+                        loadbarlen = int(avg) * 5
+                        loadbar = '#' * loadbarlen
                         self.logger.info("---------------------------------------------------------------------------------------")
                         self.logger.info(f'{id} avg latency   request    reply     ')
                         self.logger.info(
@@ -698,11 +700,10 @@ class SimpleSwitch13(app_manager.RyuApp):
                 pass
 
         #preprocess
-        open('mypcap.pcap', 'wb').close()
-        self.pcap_writer = pcaplib.Writer(open('mypcap.pcap', 'wb'),
-                                          snaplen=80)
+        open('ryu_temp_pcap.pcap', 'wb').close()
+        self.pcap_writer = pcaplib.Writer(open('ryu_temp_pcap.pcap', 'wb'), snaplen=80)
         self.pcap_writer.write_pkt(ev.msg.data)
-        X_test = ryu_preprocessing.transform_pcap('mypcap.pcap')
+        X_test = ryu_preprocessing.transform_pcap('ryu_temp_pcap.pcap')
 
         #classifier
         class_result = -1
@@ -723,7 +724,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                 #for scheduler
                 self.class_count[class_result] += 1
                 if self.ClassPrint_ctrl == 1:
-                    print(f'class={self.service_to_string[class_result]} count={self.class_count[class_result]}')
+                    self.logger.info(f'class={self.service_to_string[class_result]} count={self.class_count[class_result]}')
             except:
                 class_result = -1
                 self.class_count[class_result] += 1
@@ -734,7 +735,6 @@ class SimpleSwitch13(app_manager.RyuApp):
         ICMP_ctrl = 1
 
         #mapping dict_to_port dst src
-
         if dpid in self.dstipv4_to_port and ipv4_dst in self.dstipv4_to_port[dpid]:
             #out_port
             out_port = self.dstipv4_to_port[dpid][ipv4_dst]
@@ -1038,8 +1038,7 @@ class SimpleSwitch13(app_manager.RyuApp):
                     barlen = int(bandload / bandwidth * 11)
                     if barlen > 11:
                         barlen = 11
-                    for i in range(barlen):
-                        bar = bar + '■'
+                    bar = '#'*barlen
 
                     self.logger.info(
                         '%016x %8x %8d %8d %8d %8d %8d %8d %8.3f %8d %8d %s',
