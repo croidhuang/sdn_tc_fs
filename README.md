@@ -78,7 +78,7 @@ scapy
 
 #### 安裝mininet
 http://mininet.org/download/  
-<code>git clone git://github.com/mininet/mininet</code>  
+<code>git clone https://github.com/mininet/mininet</code>  
 <code>sudo PYTHON=python3 mininet/util/install.sh -n</code>  
 
 #### 安裝python所需的模組 (與分類器相同) 
@@ -94,7 +94,7 @@ lightgbm
 
 #### 安裝ryu  
 https://ryu.readthedocs.io/en/latest/getting_started.html  
-<code>git clone git://github.com/faucetsdn/ryu.git</code>  
+<code>git clone https://github.com/faucetsdn/ryu.git</code>  
 <code>sudo apt install python3-ryu</code>  
  
 #### 設定重播pcap參數  
