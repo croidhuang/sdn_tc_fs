@@ -13,7 +13,7 @@ PATH記得打勾
 PATH記得打勾  
 
 #### 安裝python所需的模組  
-pip3 install sklearn joblib numpy pandas matplotlib seaborn pydotplus imblearn lightgbm pyarrow fastparquet
+<code>pip3 install sklearn joblib numpy pandas matplotlib seaborn pydotplus imblearn lightgbm pyarrow fastparquet</code>  
 #### 預處理(輸入pcap, 輸出parquet)  
 開啟classifier/preprocessing_pcap.py  
 修改輸入輸出路徑  
@@ -74,7 +74,7 @@ http://mininet.org/download/
 
 
 #### 安裝python所需的模組 (與分類器相同) 
-pip3 install sklearn joblib numpy pandas matplotlib seaborn pydotplus imblearn lightgbm pyarrow fastparquet
+<code>pip3 install sklearn joblib numpy pandas matplotlib seaborn pydotplus imblearn lightgbm pyarrow fastparquet</code>  
 
 #### 安裝ryu  
 https://ryu.readthedocs.io/en/latest/getting_started.html  
